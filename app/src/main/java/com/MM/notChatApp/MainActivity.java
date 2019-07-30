@@ -20,8 +20,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,14 +31,14 @@ public class MainActivity extends AppCompatActivity {
 
     // firebase consts
     private static final int RC_SIGN_IN = 123;
-
-
+   private ListView MainListView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+     //   Toolbar toolbar = findViewById(R.id.toolbar);
+      //  setSupportActionBar(toolbar);
+        MainListView = findViewById(R.id.MainListView);
 
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -45,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                Intent intent = new Intent(MainActivity.this,ChatActivity.class);
+                startActivity(intent);
                 signOut();
             }
         });
