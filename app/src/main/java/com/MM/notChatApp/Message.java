@@ -5,6 +5,12 @@ public class Message {
     private String text;
     private String time;
     private String photoUrl;
+    /*
+    * 0 for unSend
+    * 1 for send
+    * 2 for riceve
+    * 3 for read
+    * */
     private int statues;
 
     public Message(String text, String time, String photoUrl, int statues) {

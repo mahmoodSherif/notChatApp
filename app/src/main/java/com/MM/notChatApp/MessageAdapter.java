@@ -45,7 +45,6 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         }
         timeTextView.setText(Message.getTime());
 
-
         return convertView;
     }
 }

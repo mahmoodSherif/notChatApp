@@ -40,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
       //  setSupportActionBar(toolbar);
         MainListView = findViewById(R.id.MainListView);
 
-
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -49,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
                 Intent intent = new Intent(MainActivity.this,ChatActivity.class);
                 startActivity(intent);
-                signOut();
             }
         });
 
@@ -97,7 +95,8 @@ public class MainActivity extends AppCompatActivity {
     //firebase functions
     private void signIn(){
         List<AuthUI.IdpConfig> providers = Arrays.asList(
-                new AuthUI.IdpConfig.PhoneBuilder().build()
+                new AuthUI.IdpConfig.PhoneBuilder().build(),
+                new AuthUI.IdpConfig.EmailBuilder().build()
                 );
 
         startActivityForResult(
