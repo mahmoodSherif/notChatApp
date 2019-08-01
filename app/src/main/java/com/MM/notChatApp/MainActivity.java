@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -32,13 +33,25 @@ public class MainActivity extends AppCompatActivity {
     // firebase consts
     private static final int RC_SIGN_IN = 123;
    private ListView MainListView;
+   //adapter
+    MessagesListAdapter messagesListAdapter;
+   // private ProgressBar mProgressBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-     //   Toolbar toolbar = findViewById(R.id.toolbar);
-      //  setSupportActionBar(toolbar);
         MainListView = findViewById(R.id.MainListView);
+       // mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
+        // Initialize progress bar
+        //mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+        //setAdapter
+        List<User> messages = new ArrayList<>();
+        messagesListAdapter = new MessagesListAdapter(this,R.layout.main_listview_item,messages);
+        MainListView.setAdapter(messagesListAdapter);
+        //initialize
+        MainListView = findViewById(R.id.MainListView);
+
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -48,10 +61,13 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
                 Intent intent = new Intent(MainActivity.this,ChatActivity.class);
                 startActivity(intent);
+                //
+                // signOut();
             }
         });
 
         sureSignIn();
+
 
     }
 

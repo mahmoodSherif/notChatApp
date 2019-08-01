@@ -19,6 +19,10 @@ public class Message {
         this.photoUrl = photoUrl;
         this.statues = statues;
     }
+    public Message()
+    {
+
+    }
 
     public String getText() {
         return text;
