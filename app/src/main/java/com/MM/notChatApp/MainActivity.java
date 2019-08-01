@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -91,7 +92,8 @@ public class MainActivity extends AppCompatActivity {
         }
         if(id == R.id.addNewFriend)
         {
-
+            Intent intent = new Intent(MainActivity.this,FriendsActivity.class);
+            startActivity(intent);
             return true;
         }
 
