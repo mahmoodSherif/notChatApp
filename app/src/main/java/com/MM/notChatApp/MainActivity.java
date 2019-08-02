@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.view.View;
@@ -58,12 +59,12 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//                Intent intent = new Intent(MainActivity.this, userInfo.class);
-//                startActivity(intent);
-//                //
-                 signOut();
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                Intent intent = new Intent(MainActivity.this,ChatActivity.class);
+                startActivity(intent);
+                //
+                // signOut();
             }
         });
 
@@ -90,7 +91,10 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return true;
         }
-        if(id == R.id.addNewFriend) {
+        if(id == R.id.addNewFriend)
+        {
+            Intent intent = new Intent(MainActivity.this,FriendsActivity.class);
+            startActivity(intent);
             return true;
         }
 
