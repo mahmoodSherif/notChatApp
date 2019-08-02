@@ -1,4 +1,4 @@
-package com.MM.notChatApp;
+package com.MM.notChatApp.adapters;
 
 import android.app.Activity;
 import android.content.Context;
@@ -7,6 +7,9 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.MM.notChatApp.R;
+import com.MM.notChatApp.classes.Message;
 import com.bumptech.glide.Glide;
 
 import java.util.List;

@@ -2,29 +2,24 @@ package com.MM.notChatApp;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 
+import com.MM.notChatApp.adapters.MessageAdapter;
+import com.MM.notChatApp.classes.Message;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Calendar;
 
 public class ChatActivity extends AppCompatActivity {

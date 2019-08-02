@@ -1,4 +1,4 @@
-package com.MM.notChatApp;
+package com.MM.notChatApp.classes;
 
 
 public class Message {

@@ -3,6 +3,10 @@ package com.MM.notChatApp;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.MM.notChatApp.adapters.MessagesListAdapter;
+import com.MM.notChatApp.classes.User;
+import com.MM.notChatApp.user.setUserNameForFirstTime;
+import com.MM.notChatApp.user.userInfo;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -14,14 +18,11 @@ import com.google.firebase.auth.FirebaseUser;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -57,12 +58,12 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-                Intent intent = new Intent(MainActivity.this,ChatActivity.class);
-                startActivity(intent);
-                //
-                // signOut();
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//                Intent intent = new Intent(MainActivity.this, userInfo.class);
+//                startActivity(intent);
+//                //
+                 signOut();
             }
         });
 
@@ -89,9 +90,7 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return true;
         }
-        if(id == R.id.addNewFriend)
-        {
-
+        if(id == R.id.addNewFriend) {
             return true;
         }
 
@@ -102,7 +101,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == RC_SIGN_IN){
-            if(resultCode != RESULT_OK){
+            if(resultCode == RESULT_OK){
+                if(FirebaseAuth.getInstance().getCurrentUser().getDisplayName() == null){
+                    Intent intent = new Intent(MainActivity.this, setUserNameForFirstTime.class);
+                    startActivity(intent);
+                }
+            }else{
                 finish();
             }
         }
@@ -127,10 +131,9 @@ public class MainActivity extends AppCompatActivity {
                 .signOut(this)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     public void onComplete(@NonNull Task<Void> task) {
-                        // ...
+                        signIn();
                     }
                 });
-        sureSignIn();
     }
     private void sureSignIn(){
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
