@@ -97,6 +97,11 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             return true;
         }
+        if(id == R.id.signOut)
+        {
+            AuthUI.getInstance().signOut(this);
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }

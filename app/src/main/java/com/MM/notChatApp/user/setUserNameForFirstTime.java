@@ -19,10 +19,12 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class setUserNameForFirstTime extends AppCompatActivity {
 
     // user info
-    ImageView userPhoto ;
+    CircleImageView userPhoto ;
     EditText username;
     Button done;
 
@@ -34,7 +36,7 @@ public class setUserNameForFirstTime extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_user_name_for_first_time);
-        userPhoto = (ImageView)findViewById(R.id.fUserPhoto);
+        userPhoto = findViewById(R.id.fUserphoto);
         username = (EditText)findViewById(R.id.fusername);
         done = (Button)findViewById(R.id.fdone);
         username.addTextChangedListener(new TextWatcher() {
