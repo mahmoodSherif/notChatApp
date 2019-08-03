@@ -1,5 +1,17 @@
 package com.MM.notChatApp.classes;
 
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+
+import com.MM.notChatApp.MainActivity;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 public class User {
     private String UserName;
     private String UserPhotoUrl;
@@ -53,5 +65,19 @@ public class User {
 
     public void setUserBio(String userBio) {
         UserBio = userBio;
+    }
+
+    //fireBase functions
+    public void addUserToDatabase(){
+        FirebaseUser cur = FirebaseAuth.getInstance().getCurrentUser();
+        DatabaseReference users = FirebaseDatabase.getInstance().getReference().child("users")
+                .child(cur.getUid());
+        users.setValue(new User(cur.getDisplayName(),cur.getPhotoUrl().toString(), null , null , null))
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+
+                    }
+                });
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.MM.notChatApp">
-
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -13,6 +13,7 @@
         <activity android:name=".user.userInfo" />
         <activity android:name=".FriendsActivity" />
         <activity android:name=".ChatActivity" />
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"

@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import com.MM.notChatApp.adapters.MessagesListAdapter;
 import com.MM.notChatApp.classes.User;
+import com.MM.notChatApp.dialogs.searchForNewFriend;
 import com.MM.notChatApp.user.setUserNameForFirstTime;
 import com.MM.notChatApp.user.userInfo;
 import com.firebase.ui.auth.AuthUI;
@@ -13,6 +14,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseUser;
 
 import androidx.annotation.NonNull;
@@ -69,8 +71,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         sureSignIn();
-
-
     }
 
     @Override
