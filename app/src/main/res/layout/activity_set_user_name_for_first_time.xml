@@ -9,17 +9,27 @@
 
 
     <LinearLayout
+        android:padding="3dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="horizontal">
 
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:padding="3dp"
+            android:id="@+id/fUserphoto"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            app:civ_border_width="2dp"
+            android:src="@drawable/user_empty_photo"/>
+        <!--
         <ImageView
             android:id="@+id/fUserPhoto"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             tools:src="@tools:sample/avatars" />
+            -->
 
         <EditText
             android:id="@+id/fusername"

@@ -24,11 +24,11 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:id="@+id/imageView"
+                android:id="@+id/nameimageView"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                app:srcCompat="@drawable/ic_perm_identity_black_24dp" />
+                android:src="@drawable/ic_perm_identity_black_24dp" />
 
             <EditText
                 android:id="@+id/username"
@@ -46,11 +46,11 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:id="@+id/imageView"
+                android:id="@+id/bioimageView"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                app:srcCompat="@drawable/ic_info_outline_black_24dp" />
+                android:src="@drawable/ic_info_outline_black_24dp" />
 
             <EditText
                 android:id="@+id/userBio"
