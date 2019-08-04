@@ -10,6 +10,7 @@ import com.MM.notChatApp.user.setUserNameForFirstTime;
 import com.MM.notChatApp.user.userInfo;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -36,27 +37,26 @@ public class MainActivity extends AppCompatActivity {
 
     // firebase consts
     private static final int RC_SIGN_IN = 123;
-   private ListView MainListView;
-   //adapter
+    private ListView MainListView;
+    //adapter
     MessagesListAdapter messagesListAdapter;
-   // private ProgressBar mProgressBar;
+    FirebaseAuth mfirebaseAuth;
+    // private ProgressBar mProgressBar;
+
+    private FirebaseAuth.AuthStateListener mAuthStateListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         MainListView = findViewById(R.id.MainListView);
-       // mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-        // Initialize progress bar
-        //mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-        //setAdapter
         List<User> messages = new ArrayList<>();
         messagesListAdapter = new MessagesListAdapter(this,R.layout.main_listview_item,messages);
         MainListView.setAdapter(messagesListAdapter);
-        //initialize
-        MainListView = findViewById(R.id.MainListView);
 
 
+        mfirebaseAuth = FirebaseAuth.getInstance();
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,12 +65,36 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
                 Intent intent = new Intent(MainActivity.this,ChatActivity.class);
                 startActivity(intent);
-                //
-                // signOut();
             }
         });
 
-        sureSignIn();
+        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if(user != null){
+                    Toast.makeText(MainActivity.this , "HI " + mfirebaseAuth.getCurrentUser().getDisplayName(),Toast.LENGTH_SHORT).show();
+                }else{
+                    signIn();
+                }
+            }
+        };
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mfirebaseAuth.addAuthStateListener(mAuthStateListener);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(mAuthStateListener != null) {
+            mfirebaseAuth.removeAuthStateListener(mAuthStateListener);
+        }
+        messagesListAdapter.clear();
     }
 
     @Override
@@ -97,9 +121,18 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             return true;
         }
-        if(id == R.id.signOut)
-        {
-            AuthUI.getInstance().signOut(this);
+        if(id == R.id.signOut) {
+            signOut();
+            return true;
+        }
+        if(id == R.id.info){
+            Intent intent = new Intent(MainActivity.this,userInfo.class);
+            startActivity(intent);
+            return true;
+        }
+        if(id == R.id.test){
+            Intent intent = new Intent(MainActivity.this,setUserNameForFirstTime.class);
+            startActivity(intent);
             return true;
         }
 
@@ -121,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //firebase functions
+    //auth functions
     private void signIn(){
         List<AuthUI.IdpConfig> providers = Arrays.asList(
                 new AuthUI.IdpConfig.PhoneBuilder().build(),
@@ -138,18 +171,11 @@ public class MainActivity extends AppCompatActivity {
     private void signOut(){
         AuthUI.getInstance()
                 .signOut(this)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    public void onComplete(@NonNull Task<Void> task) {
-                        signIn();
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Toast.makeText(MainActivity.this , "signed Out" ,Toast.LENGTH_LONG).show();
                     }
                 });
-    }
-    private void sureSignIn(){
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            Toast.makeText(MainActivity.this , "HI "+ user.getDisplayName(),Toast.LENGTH_SHORT).show();
-        } else {
-            signIn();
-        }
     }
 }

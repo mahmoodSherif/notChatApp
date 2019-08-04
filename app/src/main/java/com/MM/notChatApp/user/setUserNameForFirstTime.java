@@ -1,5 +1,6 @@
 package com.MM.notChatApp.user;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -12,9 +13,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.MM.notChatApp.R;
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -28,7 +34,6 @@ public class setUserNameForFirstTime extends AppCompatActivity {
     EditText username;
     Button done;
 
-
     final int RC_PHOTO_PICKER = 505;
 
     Uri photo = null;
@@ -36,9 +41,16 @@ public class setUserNameForFirstTime extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_user_name_for_first_time);
+
+        photo = Uri.parse("android.resource://com.MM.notChatApp/" + R.drawable.user_empty_photo);
         userPhoto = findViewById(R.id.fUserphoto);
-        username = (EditText)findViewById(R.id.fusername);
-        done = (Button)findViewById(R.id.fdone);
+        username = findViewById(R.id.fusername);
+        done = findViewById(R.id.fdone);
+
+        Glide.with(userPhoto.getContext())
+                .load(photo)
+                .into(userPhoto);
+
         username.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
@@ -54,6 +66,7 @@ public class setUserNameForFirstTime extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable editable) {}
         });
+
         userPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -63,20 +76,31 @@ public class setUserNameForFirstTime extends AppCompatActivity {
                 startActivityForResult(Intent.createChooser(intent ,  "Complete action using") , RC_PHOTO_PICKER);
             }
         });
+
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String name = username.getText().toString();
-                Uri photoUri = photo;
-
                 UserProfileChangeRequest profileChangeRequest = new UserProfileChangeRequest.Builder()
                         .setDisplayName(username.getText().toString())
-                        .setPhotoUri(photoUri)
+                        .setPhotoUri(photo)
                         .build();
-                FirebaseAuth.getInstance().getCurrentUser().updateProfile(profileChangeRequest);
+                FirebaseAuth.getInstance().getCurrentUser().updateProfile(profileChangeRequest)
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                finish();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(setUserNameForFirstTime.this , "Fail" ,Toast.LENGTH_LONG).show();
+                            }
+                        });
             }
         });
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

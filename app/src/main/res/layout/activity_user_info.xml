@@ -7,11 +7,14 @@
     android:orientation="vertical"
     tools:context=".user.userInfo">
 
-    <ImageView
+    <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/userPhoto"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        tools:srcCompat="@tools:sample/avatars" />
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:padding="3dp"
+        android:src="@drawable/user_empty_photo"
+        app:civ_border_width="2dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
