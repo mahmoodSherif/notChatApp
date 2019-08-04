@@ -3,7 +3,9 @@ package com.MM.notChatApp;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
@@ -88,6 +90,8 @@ public class ChatActivity extends AppCompatActivity {
         });
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
 
+        Intent intent = getIntent();
+        
 
     }
 }

@@ -31,7 +31,7 @@ public class searchForNewFriend extends DialogFragment {
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-
+                        //read from users
                     }
                 })
                 .setNegativeButton("NO", new DialogInterface.OnClickListener() {
