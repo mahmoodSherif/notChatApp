@@ -5,6 +5,7 @@ public class Message {
     private String text;
     private String time;
     private String photoUrl;
+    private String sentby;
     /*
     * 0 for unSend
     * 1 for send
@@ -13,15 +14,23 @@ public class Message {
     * */
     private int statues;
 
-    public Message(String text, String time, String photoUrl, int statues) {
+    public Message(String text, String time, String photoUrl, int statues , String user) {
         this.text = text;
         this.time = time;
         this.photoUrl = photoUrl;
         this.statues = statues;
+        sentby = user;
     }
-    public Message()
-    {
+    public Message() {
 
+    }
+
+    public String getSentby() {
+        return sentby;
+    }
+
+    public void setSentby(String sentby) {
+        this.sentby = sentby;
     }
 
     public String getText() {
