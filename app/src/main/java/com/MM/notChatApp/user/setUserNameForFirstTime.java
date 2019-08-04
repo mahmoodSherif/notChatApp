@@ -12,18 +12,22 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.MM.notChatApp.R;
 import com.bumptech.glide.Glide;
+import com.firebase.ui.auth.data.model.User;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCanceledListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -31,10 +35,13 @@ public class setUserNameForFirstTime extends AppCompatActivity {
 
     // user info
     CircleImageView userPhoto ;
-    EditText username;
+    EditText usernameTx,bioTX;
     Button done;
 
+    StorageReference usersRef;
+
     final int RC_PHOTO_PICKER = 505;
+    final String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
 
     Uri photo = null;
     @Override
@@ -42,16 +49,19 @@ public class setUserNameForFirstTime extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_user_name_for_first_time);
 
+        usersRef = FirebaseStorage.getInstance().getReference().child("profile Photos");
+
         photo = Uri.parse("android.resource://com.MM.notChatApp/" + R.drawable.user_empty_photo);
         userPhoto = findViewById(R.id.fUserphoto);
-        username = findViewById(R.id.fusername);
+        usernameTx = findViewById(R.id.fusername);
+        bioTX = findViewById(R.id.fbio);
         done = findViewById(R.id.fdone);
 
         Glide.with(userPhoto.getContext())
                 .load(photo)
                 .into(userPhoto);
 
-        username.addTextChangedListener(new TextWatcher() {
+        usernameTx.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
@@ -80,23 +90,55 @@ public class setUserNameForFirstTime extends AppCompatActivity {
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                UserProfileChangeRequest profileChangeRequest = new UserProfileChangeRequest.Builder()
-                        .setDisplayName(username.getText().toString())
-                        .setPhotoUri(photo)
-                        .build();
-                FirebaseAuth.getInstance().getCurrentUser().updateProfile(profileChangeRequest)
-                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                finish();
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(setUserNameForFirstTime.this , "Fail" ,Toast.LENGTH_LONG).show();
-                            }
-                        });
+                final String username = usernameTx.getText().toString();
+                final String bio = bioTX.getText().toString();
+                final Uri cphoto = photo;
+
+                // upload photo to storage
+                final StorageReference curPhoto = usersRef.child(phone);
+                UploadTask uploadTask = curPhoto.putFile(photo);
+                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Toast.makeText(setUserNameForFirstTime.this , "upload done",Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(setUserNameForFirstTime.this , "upload fail",Toast.LENGTH_SHORT).show();
+                    }
+                }).continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                    @Override
+                    public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                        if(!task.isSuccessful()){
+                            throw task.getException();
+                        }
+                        return curPhoto.getDownloadUrl();
+                    }
+                }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Uri> task) {
+                        if(task.isSuccessful()){
+                            Uri uri = task.getResult();
+                            new com.MM.notChatApp.classes.User(username,uri.toString(),phone,bio).addTODatabae()
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            UserProfileChangeRequest profileChangeRequest = new UserProfileChangeRequest.Builder()
+                                                    .setDisplayName(username)
+                                                    .build();
+                                            FirebaseAuth.getInstance().getCurrentUser().updateProfile(profileChangeRequest)
+                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void aVoid) {
+                                                            finish();
+                                                        }
+                                                    });
+                                        }
+                                    });
+                        }
+                    }
+                });
             }
         });
     }
