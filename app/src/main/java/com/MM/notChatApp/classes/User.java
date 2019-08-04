@@ -60,7 +60,7 @@ public class User {
         UserBio = userBio;
     }
 
-    public Task<Void> addTODatabae(){
+    public Task<Void>   addTODatabae(){
         DatabaseReference users = FirebaseDatabase.getInstance().getReference().child("users").child(phone);
         return users.setValue(new User(UserName , UserPhotoUrl , phone , UserBio));
     }

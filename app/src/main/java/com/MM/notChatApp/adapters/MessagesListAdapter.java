@@ -37,7 +37,7 @@ public class MessagesListAdapter extends ArrayAdapter<User> {
                 .into(friendImage);
         friendName.setText(user.getUserName());
         //friendLastMessage.setText(user.getUserLastMessage().getText());
-       // LastMessageTime.setText(user.getUserLastMessage().getTime());
+        //  LastMessageTime.setText(user.getUserLastMessage().getTime());
 
 
         return convertView;

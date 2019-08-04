@@ -26,6 +26,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -54,7 +55,17 @@ public class MainActivity extends AppCompatActivity {
         List<User> messages = new ArrayList<>();
         messagesListAdapter = new MessagesListAdapter(this,R.layout.main_listview_item,messages);
         MainListView.setAdapter(messagesListAdapter);
-
+        MainListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                User user = (User) adapterView.getItemAtPosition(i);
+                Intent intent = new Intent(MainActivity.this,ChatActivity.class);
+                intent.putExtra("username",user.getUserName());
+                intent.putExtra("phone",user.getPhone());
+                intent.putExtra("userPhoto",user.getUserPhotoUrl());
+                startActivity(intent);
+            }
+        });
 
         mfirebaseAuth = FirebaseAuth.getInstance();
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -167,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAvailableProviders(providers)
                         .build(),
                 RC_SIGN_IN);
+
     }
     private void signOut(){
         AuthUI.getInstance()
