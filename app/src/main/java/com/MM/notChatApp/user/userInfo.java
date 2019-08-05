@@ -53,7 +53,7 @@ public class userInfo extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_info);
-        final LinearLayout layout = findViewById(R.id.layout);
+        //final LinearLayout layout = findViewById(R.id.layout);
         curFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
         phone = curFirebaseUser.getPhoneNumber();

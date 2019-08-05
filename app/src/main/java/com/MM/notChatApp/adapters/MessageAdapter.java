@@ -7,10 +7,14 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.classes.Message;
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.List;
 
@@ -23,7 +27,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.message_item, parent, false);
-        }
+           }
         ImageView imageViewMessage = convertView.findViewById(R.id.ImageMessage);
         TextView messageTextView = convertView.findViewById(R.id.Message);
         TextView timeTextView = convertView.findViewById(R.id.MessageTime);

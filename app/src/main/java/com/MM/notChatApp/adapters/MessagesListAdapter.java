@@ -12,6 +12,7 @@ import com.MM.notChatApp.classes.User;
 import com.bumptech.glide.Glide;
 
 import java.util.List;
+import java.util.Locale;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -29,16 +30,13 @@ public class MessagesListAdapter extends ArrayAdapter<User> {
         CircleImageView friendImage = convertView.findViewById(R.id.MainfriendImage);
         TextView friendName = convertView.findViewById(R.id.MainfriendName);
         TextView friendLastMessage = convertView.findViewById(R.id.MainFriendMessage);
-        TextView LastMessageTime = convertView.findViewById(R.id.MainMessageTime);
-
+       // TextView LastMessageTime = convertView.findViewById(R.id.MainMessageTime);
         User user = getItem(position);
         Glide.with(friendImage.getContext())
                 .load(user.getUserPhotoUrl())
                 .into(friendImage);
         friendName.setText(user.getUserName());
-        //friendLastMessage.setText(user.getUserLastMessage().getText());
-        //  LastMessageTime.setText(user.getUserLastMessage().getTime());
-
+        friendLastMessage.setText(user.getUserBio());
 
         return convertView;
     }

@@ -16,6 +16,7 @@ import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.MM.notChatApp.adapters.friendsAdapter;
@@ -30,6 +31,8 @@ import java.util.ArrayList;
 
 public class FriendsActivity extends AppCompatActivity {
 
+    //counter for process bar
+    int counter = 0;
     ListView FriendsList;
     friendsAdapter adapter;
     ArrayList<String>numbers ;
@@ -37,10 +40,13 @@ public class FriendsActivity extends AppCompatActivity {
     DatabaseReference databaseReference;
     // Request code for READ_CONTACTS
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
+    ProgressBar progressBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends);
+        progressBar = findViewById(R.id.progressBar);
+        progressBar.setVisibility(ProgressBar.INVISIBLE);
         firebaseDatabase = FirebaseDatabase.getInstance();
         FriendsList = findViewById(R.id.FriendsList);
         FriendsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -49,27 +55,29 @@ public class FriendsActivity extends AppCompatActivity {
                User selectedUser = (User) adapterView.getItemAtPosition(i);
                 Intent intent = new Intent(FriendsActivity.this,ChatActivity.class);
               //  intent.putExtra("userFromIntent", (Parcelable) selectedUser);
-                intent.putExtra("userName",selectedUser.getUserName());
-                intent.putExtra("userPhone",selectedUser.getPhone());
-                intent.putExtra("userphotoUrl",selectedUser.getUserPhotoUrl());
+                intent.putExtra("username",selectedUser.getUserName());
+                intent.putExtra("phone",selectedUser.getPhone());
+                intent.putExtra("userPhoto",selectedUser.getUserPhotoUrl());
+                startActivity(intent);
             }
         });
         ArrayList<User> users = new ArrayList<>();
         numbers = new ArrayList<>();
         adapter = new friendsAdapter(this,R.layout.friends_list_item,users);
         FriendsList.setAdapter(adapter);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+         //   requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
             getFromContacts();
-        }
+       // }
         //Toast.makeText(getApplicationContext(),String.valueOf(numbers.size()),Toast.LENGTH_SHORT).show();
         for(int i=0;i<numbers.size();i++) {
             read(numbers.get(i));
+            counter++;
         }
 
     }
-    private void read(final String number)
+    private void read(String number)
     {
         databaseReference = firebaseDatabase.getReference().child("users").child(number);
 
@@ -82,6 +90,14 @@ public class FriendsActivity extends AppCompatActivity {
                     {
                         adapter.add(user);
                     }
+
+                        //Toast.makeText(getApplicationContext(),number,Toast.LENGTH_SHORT).show();
+                    if(counter == numbers.size()) {
+                        progressBar.setVisibility(ProgressBar.INVISIBLE);
+                    }
+                    else
+                        progressBar.setVisibility(ProgressBar.VISIBLE);
+
                 }
 
                 @Override
@@ -89,6 +105,10 @@ public class FriendsActivity extends AppCompatActivity {
 
                 }
             });
+        if(counter==numbers.size())
+        {
+            progressBar.setVisibility(ProgressBar.INVISIBLE);
+        }
 
     }
 
