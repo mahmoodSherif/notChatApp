@@ -12,6 +12,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.MM.notChatApp.R;
@@ -42,7 +43,7 @@ public class setUserNameForFirstTime extends AppCompatActivity {
 
     final int RC_PHOTO_PICKER = 505;
     final String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
-
+    private ProgressBar firstSetProBar;
     Uri photo = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,8 @@ public class setUserNameForFirstTime extends AppCompatActivity {
         usernameTx = findViewById(R.id.fusername);
         bioTX = findViewById(R.id.fbio);
         done = findViewById(R.id.fdone);
+        firstSetProBar = findViewById(R.id.firstSetProBar);
+        firstSetProBar.setVisibility(View.INVISIBLE);
 
         Glide.with(userPhoto.getContext())
                 .load(photo)
@@ -90,6 +93,7 @@ public class setUserNameForFirstTime extends AppCompatActivity {
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                firstSetProBar.setVisibility(View.VISIBLE);
                 final String username = usernameTx.getText().toString();
                 final String bio = bioTX.getText().toString();
                 final Uri cphoto = photo;

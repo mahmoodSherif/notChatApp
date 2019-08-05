@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.MM.notChatApp.R;
@@ -41,6 +42,7 @@ public class userInfo extends AppCompatActivity {
     CircleImageView userImage;
     EditText usernameTX, userBioTX, userPhoneTX;
     Button saveBtn;
+    ProgressBar progressBar;
 
     //firebase
     FirebaseUser curFirebaseUser;
@@ -57,22 +59,13 @@ public class userInfo extends AppCompatActivity {
         curFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
         phone = curFirebaseUser.getPhoneNumber();
-        firebaseStorage.getReference().child("profile Photos").child(phone).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-            @Override
-            public void onSuccess(Uri uri) {
-                photo = uri;
-                Glide.with(userImage.getContext())
-                        .load(photo)
-                        .into(userImage);
-            }
-        });
 
         userImage = findViewById(R.id.userPhoto);
         usernameTX = findViewById(R.id.username);
         userBioTX = findViewById(R.id.userBio);
         userPhoneTX = findViewById(R.id.userPhone);
         saveBtn = findViewById(R.id.saveBtn);
-
+        progressBar = findViewById(R.id.probar);
 
         FirebaseDatabase.getInstance().getReference().child("users").child(phone).addValueEventListener(new ValueEventListener() {
             @Override
@@ -81,6 +74,16 @@ public class userInfo extends AppCompatActivity {
                 usernameTX.setText(curUser.getUserName());
                 userPhoneTX.setText(curUser.getPhone());
                 userBioTX.setText(curUser.getUserBio());
+                firebaseStorage.getReference().child("profile Photos").child(phone).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        photo = uri;
+                        Glide.with(userImage.getContext())
+                                .load(photo)
+                                .into(userImage);
+                        progressBar.setVisibility(View.INVISIBLE);
+                    }
+                });
             }
 
             @Override
@@ -101,6 +104,7 @@ public class userInfo extends AppCompatActivity {
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                progressBar.setVisibility(View.VISIBLE);
                 if(isCh){
                     final StorageReference curPhoto = FirebaseStorage.getInstance().getReference().child("profile Photos").child(phone);
                     UploadTask uploadTask = curPhoto.putFile(photo);
@@ -131,6 +135,7 @@ public class userInfo extends AppCompatActivity {
                                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                                             @Override
                                             public void onSuccess(Void aVoid) {
+                                                progressBar.setVisibility(View.INVISIBLE);
                                                 finish();
                                             }
                                         });
@@ -138,14 +143,18 @@ public class userInfo extends AppCompatActivity {
                         }
                     });
                 }else{
-                    new com.MM.notChatApp.classes.User(usernameTX.getText().toString(),firebaseStorage.getReference().child("profile Photos").child(phone).getDownloadUrl().toString()
-                            ,phone,userBioTX.getText().toString()).addTODatabae()
-                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    finish();
-                                }
-                            });
+                    firebaseStorage.getReference().child("profile Photos").child(phone).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            new com.MM.notChatApp.classes.User(usernameTX.getText().toString(),uri.toString(),phone,userBioTX.getText().toString()).addTODatabae()
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            finish();
+                                        }
+                                    });
+                        }
+                    });
                 }
             }
 
