@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.MM.notChatApp.adapters.MessagesListAdapter;
+import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
 import com.MM.notChatApp.dialogs.searchForNewFriend;
 import com.MM.notChatApp.user.setUserNameForFirstTime;
@@ -17,6 +18,12 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,13 +33,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,17 +54,20 @@ public class MainActivity extends AppCompatActivity {
     MessagesListAdapter messagesListAdapter;
     FirebaseAuth mfirebaseAuth;
     // private ProgressBar mProgressBar;
-
     private FirebaseAuth.AuthStateListener mAuthStateListener;
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference chatListRef;
+    private ChildEventListener childEventListener;
+    private ChildEventListener MessagegsEventListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        firebaseDatabase = FirebaseDatabase.getInstance();
         MainListView = findViewById(R.id.MainListView);
-        List<User> messages = new ArrayList<>();
-        messagesListAdapter = new MessagesListAdapter(this,R.layout.main_listview_item,messages);
+        List<User> usersList= new ArrayList<>();
+        messagesListAdapter = new MessagesListAdapter(this,R.layout.main_listview_item,usersList);
         MainListView.setAdapter(messagesListAdapter);
         MainListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -72,9 +86,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-                Intent intent = new Intent(MainActivity.this,ChatActivity.class);
+                Intent intent = new Intent(MainActivity.this,FriendsActivity.class);
                 startActivity(intent);
             }
         });
@@ -85,13 +97,108 @@ public class MainActivity extends AppCompatActivity {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if(user != null){
                     Toast.makeText(MainActivity.this , "HI " + mfirebaseAuth.getCurrentUser().getDisplayName(),Toast.LENGTH_SHORT).show();
+                    getChatList();
                 }else{
                     signIn();
+
                 }
             }
         };
 
     }
+    private void getChatList()
+    {
+        //Listener to get users friends that he talked to
+            childEventListener = new ChildEventListener() {
+                @Override
+                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    final String friendPhone = dataSnapshot.getKey();
+                   Toast.makeText(getApplicationContext(),"fuck",Toast.LENGTH_SHORT).show();
+                    final String chatId = dataSnapshot.getValue(String.class);
+                    //get last message sent
+                        MessagegsEventListener = new ChildEventListener() {
+                            @Override
+                            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                                Message message = dataSnapshot.getValue(Message.class);
+                                final String LastMessage = message.getText();
+                                //get user data
+                                FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
+                                        new ValueEventListener() {
+                                            @Override
+                                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                                User friendUser = dataSnapshot.getValue(User.class);
+                                                friendUser.setUserBio(LastMessage);
+                                                int check = 0;
+                                                for(int i=0;i<messagesListAdapter.getCount();i++)
+                                                {
+                                                    User myuser = messagesListAdapter.getItem(i);
+                                                    if(myuser.getPhone().equals(friendPhone))
+                                                    {
+                                                        check = -1;
+                                                        break;
+                                                    }
+                                                }
+                                                if(check!=-1) {
+                                                    messagesListAdapter.add(friendUser);
+                                                }
+                                            }
+                                            @Override
+                                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                            }
+                                        }
+                                );
+                            }
+
+                            @Override
+                            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                            }
+
+                            @Override
+                            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                            }
+
+                            @Override
+                            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        };
+                        FirebaseDatabase.getInstance().getReference().child("chats").
+                                child(chatId).orderByKey().limitToLast(1).addChildEventListener(MessagegsEventListener);
+                    }
+
+
+                @Override
+                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            };
+            FirebaseDatabase.getInstance().getReference().child("chatList").child(FirebaseAuth
+            .getInstance().getCurrentUser().getPhoneNumber()).addChildEventListener(childEventListener);
+        }
+
 
     @Override
     protected void onResume() {
