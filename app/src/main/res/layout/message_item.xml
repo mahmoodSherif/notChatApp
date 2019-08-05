@@ -1,54 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    android:id="@+id/messagelayout"
-    android:layout_gravity="end"
-    android:padding="8dp"
-    android:background="@drawable/message_shape"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="wrap_content"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_alignParentEnd="true"
-    android:layout_alignParentRight="true">
+    android:orientation="horizontal"
+    android:gravity="start"
+    android:id="@+id/messagelayout"
+    android:padding="8dp">
+
     <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/message_shape"
         android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-    <LinearLayout
-        android:id="@+id/layout"
-        android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-        <ImageView
-            android:layout_gravity="right"
-            android:id="@+id/MessageStatues"
-            android:padding="5dp"
+        android:padding="8dp">
+
+        <LinearLayout
+            android:id="@+id/layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/sentsmall"/>
-    <ImageView
-        android:id="@+id/ImageMessage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+            android:orientation="horizontal">
 
-    <TextView
-        android:layout_gravity="right"
-        android:maxWidth="200dp"
-        android:textColor="#000"
-        android:id="@+id/Message"
-        android:textSize="25dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Message"/>
-    </LinearLayout>
-    <TextView
-        android:id="@+id/MessageTime"
-        android:textSize="15dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="3:00 pm"
-        android:layout_gravity="right"
-        />
-    </LinearLayout>
+            <ImageView
+                android:id="@+id/MessageStatues"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:padding="5dp"
+                android:src="@drawable/sentsmall" />
 
-</RelativeLayout>
+            <ImageView
+                android:id="@+id/ImageMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/Message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:maxWidth="200dp"
+                android:text="Message"
+                android:textColor="#000"
+                android:textSize="25dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/MessageTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:text="3:00 pm"
+            android:textSize="15dp" />
+    </LinearLayout>
+</LinearLayout>

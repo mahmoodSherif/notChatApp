@@ -58,7 +58,6 @@ public class ChatActivity extends AppCompatActivity {
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mDatabaseReference;
     // cur chat info
-    private String CurChatId = null;
     String userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
     String friendPhone = null;
     Uri photo = null;
@@ -94,6 +93,7 @@ public class ChatActivity extends AppCompatActivity {
 
         List<Message> messages = new ArrayList<>();
         messageAdapter = new MessageAdapter(ChatActivity.this,R.layout.message_item,messages);
+        messagesListView.setAdapter(messageAdapter);
 
         // set friend info
         BarfriendName.setText(friendname);
@@ -122,7 +122,38 @@ public class ChatActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
             }
         });
+        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
 
+        ensureChatId();
+    }
+    private void ensureChatId(){
+        FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String CurChatId = null;
+                        if(dataSnapshot.getValue() == null){
+                            DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference().child("chats").push();
+                            String chatId = chatRef.getKey();
+                            FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
+                                    .setValue(chatId);
+                            FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone)
+                                    .setValue(chatId);
+                            CurChatId = chatId;
+                        }else{
+                            CurChatId = dataSnapshot.getValue().toString();
+                        }
+                        getChatMessages(CurChatId);
+                        setOnClickListenerForSendButton(CurChatId);
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+    }
+
+    private void setOnClickListenerForSendButton(final String CurChatId){
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -135,93 +166,26 @@ public class ChatActivity extends AppCompatActivity {
                 mMessageEditText.setText("");
             }
         });
-
-
-        FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.getValue() == null){
-                            DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference().child("chats").push();
-                            String chatId = chatRef.getKey();
-                            FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
-                                    .setValue(chatId);
-                            FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone)
-                                    .setValue(chatId);
-                            CurChatId = chatId;
-                        }else{
-                            CurChatId = dataSnapshot.getValue().toString();
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
-        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
-        getChatMessages();
     }
-    private void getChatMessages()
-    {
-        FirebaseDatabase.getInstance().getReference().child("chatList").child(
-                FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
-        ).child(friendPhone).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                String chatId = dataSnapshot.getValue(String.class);
-                if(messagesListener == null)
-                {
-                    messagesListener = new ChildEventListener() {
-                        @RequiresApi(api = Build.VERSION_CODES.M)
-                        @Override
-                        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                            LayoutInflater inflater = getLayoutInflater();
-                            View view = inflater.inflate(R.layout.message_item,null);
-                            Message message = dataSnapshot.getValue(Message.class);
-                            messageAdapter.add(message);
-                            if(message.getSentby().equals(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()))
-                            {
-                                view.setForegroundGravity(Gravity.RIGHT);
-                                messageAdapter.add(message);
-                            }
-                            else
-                            {
-                                view.setForegroundGravity(Gravity.LEFT);
-                                messageAdapter.add(message);
-                            }
-
-                        }
-
-                        @Override
-                        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-                        }
-
-                        @Override
-                        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-                        }
-
-                        @Override
-                        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                        }
-                    };
-                    FirebaseDatabase.getInstance().getReference().child("chats").child(chatId)
-                            .addChildEventListener(messagesListener);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
+    private void getChatMessages(String id) {
+        FirebaseDatabase.getInstance().getReference().child("chats").child(id)
+                .addChildEventListener( new ChildEventListener() {
+                    @RequiresApi(api = Build.VERSION_CODES.M)
+                    @Override
+                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                        LayoutInflater inflater = getLayoutInflater();
+                        //View view = inflater.inflate(R.layout.message_item,null);
+                        Message message = dataSnapshot.getValue(Message.class);
+                        messageAdapter.add(message);
+                    }
+                    @Override
+                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+                    @Override
+                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
+                    @Override
+                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {}
+                });
     }
 }
