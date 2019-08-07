@@ -1,6 +1,11 @@
 package com.MM.notChatApp;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 
 import com.MM.notChatApp.adapters.MessagesListAdapter;
@@ -9,6 +14,10 @@ import com.MM.notChatApp.classes.User;
 import com.MM.notChatApp.dialogs.searchForNewFriend;
 import com.MM.notChatApp.user.setUserNameForFirstTime;
 import com.MM.notChatApp.user.userInfo;
+import com.baoyz.swipemenulistview.SwipeMenu;
+import com.baoyz.swipemenulistview.SwipeMenuCreator;
+import com.baoyz.swipemenulistview.SwipeMenuItem;
+import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -23,22 +32,29 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
+import com.hudomju.swipe.SwipeToDismissTouchListener;
+import com.hudomju.swipe.adapter.ListViewAdapter;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AbsListView;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
     // firebase consts
     private static final int RC_SIGN_IN = 123;
-    private ListView MainListView;
+    private SwipeMenuListView MainListView;
     //adapter
     MessagesListAdapter messagesListAdapter;
     FirebaseAuth mfirebaseAuth;
@@ -64,19 +80,78 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         firebaseDatabase = FirebaseDatabase.getInstance();
-        MainListView = findViewById(R.id.MainListView);
-        List<User> usersList= new ArrayList<>();
-        messagesListAdapter = new MessagesListAdapter(this,R.layout.main_listview_item,usersList);
+         MainListView = (SwipeMenuListView) findViewById(R.id.listView);
+        List<User> usersList = new ArrayList<>();
+        messagesListAdapter = new MessagesListAdapter(this, R.layout.main_listview_item, usersList);
         MainListView.setAdapter(messagesListAdapter);
+
+        SwipeMenuCreator creator = new SwipeMenuCreator() {
+
+            @Override
+            public void create(SwipeMenu menu) {
+                // create "open" item
+                SwipeMenuItem openItem = new SwipeMenuItem(
+                        getApplicationContext());
+                // set item background
+                openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
+                        0xCE)));
+                // set item width
+                openItem.setWidth(170);
+                // set item title
+                openItem.setTitle("Open");
+                // set item title fontsize
+                openItem.setTitleSize(18);
+                // set item title font color
+                openItem.setTitleColor(Color.WHITE);
+                // add to menu
+                menu.addMenuItem(openItem);
+
+                // create "delete" item
+                SwipeMenuItem deleteItem = new SwipeMenuItem(
+                        getApplicationContext());
+                // set item background
+                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                        0x3F, 0x25)));
+                // set item width
+                deleteItem.setWidth(170);
+                // set a icon
+                deleteItem.setIcon(R.drawable.delete_icon);
+                // add to menu
+                menu.addMenuItem(deleteItem);
+            }
+        };
+
+// set creator
+        MainListView.setMenuCreator(creator);
+        MainListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                switch (index) {
+                    case 0:
+                        // open
+                        Toast.makeText(getApplicationContext(),"zero",Toast.LENGTH_SHORT).show();
+                        break;
+                    case 1:
+                        // delete
+                        Toast.makeText(getApplicationContext(),"one",Toast.LENGTH_SHORT).show();
+                        deleteChat(messagesListAdapter.getItem(position),position);
+                        break;
+                }
+                // false : close the menu; true : not close the menu
+                return false;
+            }
+        });
+
         MainListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 User user = (User) adapterView.getItemAtPosition(i);
-                Intent intent = new Intent(MainActivity.this,ChatActivity.class);
-                intent.putExtra("username",user.getUserName());
-                intent.putExtra("phone",user.getPhone());
-                intent.putExtra("userPhoto",user.getUserPhotoUrl());
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                intent.putExtra("username", user.getUserName());
+                intent.putExtra("phone", user.getPhone());
+                intent.putExtra("userPhoto", user.getUserPhotoUrl());
                 startActivity(intent);
             }
         });
@@ -86,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this,FriendsActivity.class);
+                Intent intent = new Intent(MainActivity.this, FriendsActivity.class);
                 startActivity(intent);
             }
         });
@@ -95,124 +170,170 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
-                if(user != null){
-                    Toast.makeText(MainActivity.this , "HI " + mfirebaseAuth.getCurrentUser().getDisplayName(),Toast.LENGTH_SHORT).show();
+                if (user != null) {
+                    Toast.makeText(MainActivity.this, "HI " + mfirebaseAuth.getCurrentUser().getDisplayName(), Toast.LENGTH_SHORT).show();
                     getChatList();
-                }else{
+                } else {
                     signIn();
 
                 }
             }
         };
-
+    //    CheckConnection();
     }
-    private void getChatList()
+    private void deleteChat(final User user,int position)
     {
-        //Listener to get users friends that he talked to
-            childEventListener = new ChildEventListener() {
-                @Override
-                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                    final String friendPhone = dataSnapshot.getKey();
-                   Toast.makeText(getApplicationContext(),"fuck",Toast.LENGTH_SHORT).show();
-                    final String chatId = dataSnapshot.getValue(String.class);
-                    //get last message sent
-                        MessagegsEventListener = new ChildEventListener() {
-                            @Override
-                            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                                Message message = dataSnapshot.getValue(Message.class);
-                                final String LastMessage = message.getText();
-                                //get user data
-                                FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
-                                        new ValueEventListener() {
-                                            @Override
-                                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                                User friendUser = dataSnapshot.getValue(User.class);
-                                                friendUser.setUserBio(LastMessage);
-                                                int check = 0;
-                                                for(int i=0;i<messagesListAdapter.getCount();i++)
-                                                {
-                                                    User myuser = messagesListAdapter.getItem(i);
-                                                    if(myuser.getPhone().equals(friendPhone))
-                                                    {
-                                                        check = -1;
-                                                        break;
-                                                    }
-                                                }
-                                                if(check!=-1) {
-                                                    messagesListAdapter.add(friendUser);
-                                                }
-                                            }
-                                            @Override
-                                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                                            }
+        firebaseDatabase.getReference().child("chatList").child(user.getPhone()).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(!dataSnapshot.hasChild(mfirebaseAuth.getCurrentUser().getPhoneNumber()))
+                        {
+                            firebaseDatabase.getReference().child("chatList").child(mfirebaseAuth.getCurrentUser().getPhoneNumber()).addListenerForSingleValueEvent(
+                                    new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            String chatId = dataSnapshot.getValue(String.class);
+                                            firebaseDatabase.getReference().child("chats").child(chatId)
+                                                    .removeValue();
+
                                         }
-                                );
-                            }
 
-                            @Override
-                            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                            }
-
-                            @Override
-                            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-                            }
-
-                            @Override
-                            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                            }
-                        };
-                        FirebaseDatabase.getInstance().getReference().child("chats").
-                                child(chatId).orderByKey().limitToLast(1).addChildEventListener(MessagegsEventListener);
+                                        }
+                                    }
+                            );
+                        }
+                        firebaseDatabase.getReference().child("chatList").child(mfirebaseAuth.getCurrentUser().getPhoneNumber())
+                                .child(user.getPhone()).removeValue();
+                        messagesListAdapter.remove(user);
                     }
 
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                @Override
-                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+                    }
                 }
+        );
 
-                @Override
-                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+    }
 
-                }
+    private void getChatList() {
+        //Listener to get users friends that he talked to
+        childEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                final String friendPhone = dataSnapshot.getKey();
+                final String chatId = dataSnapshot.getValue(String.class);
+                //get last message sent
+                MessagegsEventListener = new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                        Message message = dataSnapshot.getValue(Message.class);
+                        final String LastMessage = message.getText();
+                        //get user data
+                        FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
+                                new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                        User friendUser = dataSnapshot.getValue(User.class);
+                                        friendUser.setUserBio(LastMessage);
+                                        int check = 0;
+                                        for (int i = 0; i < messagesListAdapter.getCount(); i++) {
+                                            User myuser = messagesListAdapter.getItem(i);
+                                            if (myuser.getPhone().equals(friendPhone)) {
+                                                check = -1;
+                                                break;
+                                            }
+                                        }
+                                        if (check != -1) {
+                                            messagesListAdapter.add(friendUser);
+                                        }
+                                    }
 
-                @Override
-                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
+                                    }
+                                }
+                        );
+                    }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    @Override
+                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
-                }
-            };
-            FirebaseDatabase.getInstance().getReference().child("chatList").child(FirebaseAuth
-            .getInstance().getCurrentUser().getPhoneNumber()).addChildEventListener(childEventListener);
-        }
+                    }
 
+                    @Override
+                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                    }
+
+                    @Override
+                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                };
+                FirebaseDatabase.getInstance().getReference().child("chats").
+                        child(chatId).orderByKey().limitToLast(1).addChildEventListener(MessagegsEventListener);
+            }
+
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        };
+        FirebaseDatabase.getInstance().getReference().child("chatList").child(FirebaseAuth
+                .getInstance().getCurrentUser().getPhoneNumber()).addChildEventListener(childEventListener);
+    }
+
+    private void status(String status) {
+        HashMap<String, Object> hashMap = new HashMap<>();
+        hashMap.put("UserStatues", status);
+        FirebaseDatabase.getInstance().getReference().child("users").child(
+                mfirebaseAuth.getCurrentUser().getPhoneNumber()
+        ).updateChildren(hashMap);
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
         mfirebaseAuth.addAuthStateListener(mAuthStateListener);
+        status("online");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if(mAuthStateListener != null) {
+        if (mAuthStateListener != null) {
             mfirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
         messagesListAdapter.clear();
+        status("offline");
     }
 
     @Override
@@ -233,23 +354,17 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return true;
         }
-        if(id == R.id.addNewFriend)
-        {
-            Intent intent = new Intent(MainActivity.this,FriendsActivity.class);
+        if (id == R.id.addNewFriend) {
+            Intent intent = new Intent(MainActivity.this, FriendsActivity.class);
             startActivity(intent);
             return true;
         }
-        if(id == R.id.signOut) {
+        if (id == R.id.signOut) {
             signOut();
             return true;
         }
-        if(id == R.id.info){
-            Intent intent = new Intent(MainActivity.this,userInfo.class);
-            startActivity(intent);
-            return true;
-        }
-        if(id == R.id.test){
-            Intent intent = new Intent(MainActivity.this,setUserNameForFirstTime.class);
+        if (id == R.id.info) {
+            Intent intent = new Intent(MainActivity.this, userInfo.class);
             startActivity(intent);
             return true;
         }
@@ -260,24 +375,24 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == RC_SIGN_IN){
-            if(resultCode == RESULT_OK){
-                if(FirebaseAuth.getInstance().getCurrentUser().getDisplayName() == null){
+        if (requestCode == RC_SIGN_IN) {
+            if (resultCode == RESULT_OK) {
+                if (FirebaseAuth.getInstance().getCurrentUser().getDisplayName() == null) {
                     Intent intent = new Intent(MainActivity.this, setUserNameForFirstTime.class);
                     startActivity(intent);
                 }
-            }else{
+            } else {
                 finish();
             }
         }
     }
 
     //auth functions
-    private void signIn(){
+    private void signIn() {
         List<AuthUI.IdpConfig> providers = Arrays.asList(
                 new AuthUI.IdpConfig.PhoneBuilder().build(),
                 new AuthUI.IdpConfig.EmailBuilder().build()
-                );
+        );
 
         startActivityForResult(
                 AuthUI.getInstance()
@@ -287,14 +402,54 @@ public class MainActivity extends AppCompatActivity {
                 RC_SIGN_IN);
 
     }
-    private void signOut(){
+
+    private void signOut() {
         AuthUI.getInstance()
                 .signOut(this)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Toast.makeText(MainActivity.this , "signed Out" ,Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, "signed Out", Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+    public boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+    public void CheckConnection(String phone)
+    {
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        final DatabaseReference myConnectionsRef = database.getReference("users/"+phone+"/connections");
+
+// Stores the timestamp of my last disconnect (the last time I was seen online)
+        final DatabaseReference lastOnlineRef = database.getReference("/users/"+phone+"/lastOnline");
+
+        final DatabaseReference connectedRef = database.getReference(".info/connected");
+        connectedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                boolean connected = snapshot.getValue(Boolean.class);
+                if (connected) {
+                    DatabaseReference con = myConnectionsRef.push();
+
+                    // When this device disconnects, remove it
+                    con.onDisconnect().removeValue();
+
+                    // When I disconnect, update the last time I was seen online
+                    lastOnlineRef.onDisconnect().setValue(ServerValue.TIMESTAMP);
+                    // Add this device to my connections list
+                    // this value could contain info about the device or a timestamp too
+                    con.setValue(Boolean.TRUE);
+                    Toast.makeText(getApplicationContext(),"connected",Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+            }
+        });
     }
 }

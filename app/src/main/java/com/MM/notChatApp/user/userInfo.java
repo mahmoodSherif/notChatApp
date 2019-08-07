@@ -131,7 +131,7 @@ public class userInfo extends AppCompatActivity {
                         public void onComplete(@NonNull Task<Uri> task) {
                             if(task.isSuccessful()){
                                 Uri uri = task.getResult();
-                                new com.MM.notChatApp.classes.User(usernameTX.getText().toString(),uri.toString(),phone,userBioTX.getText().toString()).addTODatabae()
+                                new com.MM.notChatApp.classes.User(usernameTX.getText().toString(),uri.toString(),phone,userBioTX.getText().toString(),null).addTODatabae()
                                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                                             @Override
                                             public void onSuccess(Void aVoid) {
@@ -146,7 +146,7 @@ public class userInfo extends AppCompatActivity {
                     firebaseStorage.getReference().child("profile Photos").child(phone).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
-                            new com.MM.notChatApp.classes.User(usernameTX.getText().toString(),uri.toString(),phone,userBioTX.getText().toString()).addTODatabae()
+                            new com.MM.notChatApp.classes.User(usernameTX.getText().toString(),uri.toString(),phone,userBioTX.getText().toString(),null).addTODatabae()
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
                                         public void onSuccess(Void aVoid) {

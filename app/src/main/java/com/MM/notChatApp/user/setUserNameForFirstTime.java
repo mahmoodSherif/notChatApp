@@ -124,7 +124,7 @@ public class setUserNameForFirstTime extends AppCompatActivity {
                     public void onComplete(@NonNull Task<Uri> task) {
                         if(task.isSuccessful()){
                             Uri uri = task.getResult();
-                            new com.MM.notChatApp.classes.User(username,uri.toString(),phone,bio).addTODatabae()
+                            new com.MM.notChatApp.classes.User(username,uri.toString(),phone,bio,null).addTODatabae()
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
                                         public void onSuccess(Void aVoid) {

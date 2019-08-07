@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.MM.notChatApp.adapters.friendsAdapter;
 import com.MM.notChatApp.classes.User;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -28,6 +29,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class FriendsActivity extends AppCompatActivity {
 
@@ -141,5 +143,26 @@ public class FriendsActivity extends AppCompatActivity {
                 Toast.makeText(this, "Until you grant the permission, we cannot display the names", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+    private void status(String status)
+    {
+        HashMap<String,Object> hashMap = new HashMap<>();
+        hashMap.put("UserStatues",status);
+        FirebaseDatabase.getInstance().getReference().child("users").child(
+                FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
+        ).updateChildren(hashMap);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        status("online");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        adapter.clear();
+        status("offline");
     }
 }

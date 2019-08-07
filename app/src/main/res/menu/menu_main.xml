@@ -3,9 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.MM.notChatApp.MainActivity">
     <item
-        android:id="@+id/test"
-        android:title="test" />
-    <item
         android:id="@+id/info"
         android:title="info" />
     <item

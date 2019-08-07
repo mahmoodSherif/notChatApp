@@ -9,12 +9,13 @@
     <de.hdodenhof.circleimageview.CircleImageView
         android:padding="5dp"
         android:id="@+id/BarFriendImage"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         app:civ_border_width="2dp"
         android:src="@mipmap/ic_launcher_round"/>
 
     <LinearLayout
+        android:layout_gravity="center"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -23,19 +24,20 @@
             android:id="@+id/BarfriendName"
             android:text="Friend Name"
             android:textSize="20sp"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="horizontal">
             <TextView
+                android:visibility="gone"
                 android:id="@+id/BarFriendLastSeen"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Online"
-                android:textSize="10dp"/>
+                android:textSize="15dp"/>
         </LinearLayout>
     </LinearLayout>
 

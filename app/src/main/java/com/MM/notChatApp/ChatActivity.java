@@ -23,6 +23,7 @@ import android.widget.TextView;
 
 import com.MM.notChatApp.adapters.MessageAdapter;
 import com.MM.notChatApp.classes.Message;
+import com.MM.notChatApp.classes.User;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
@@ -35,6 +36,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -53,6 +55,7 @@ public class ChatActivity extends AppCompatActivity {
     // bar views
     private TextView BarfriendName;
     private CircleImageView BarFriendImage;
+    private TextView friendStatus;
 
     // firebase
     private FirebaseDatabase mFirebaseDatabase;
@@ -62,11 +65,14 @@ public class ChatActivity extends AppCompatActivity {
     String friendPhone = null;
     Uri photo = null;
     String friendname = null;
+    boolean readMessage = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        readMessage = true;
         // intent
         if(getIntent().getExtras()!=null) {
             friendname = getIntent().getExtras().getString("username");
@@ -79,11 +85,12 @@ public class ChatActivity extends AppCompatActivity {
         this.getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         getSupportActionBar().setCustomView(R.layout.custom_bar);
-        View view = getSupportActionBar().getCustomView();
+        final View view = getSupportActionBar().getCustomView();
 
         // bar views
         BarfriendName = view.findViewById(R.id.BarfriendName);
         BarFriendImage = view.findViewById(R.id.BarFriendImage);
+        friendStatus = view.findViewById(R.id.BarFriendLastSeen);
 
 
         messagesListView = findViewById(R.id.messagesList);
@@ -100,6 +107,7 @@ public class ChatActivity extends AppCompatActivity {
         Glide.with(BarFriendImage.getContext())
                 .load(photo)
                 .into(BarFriendImage);
+        checkStatus();
 
 
 
@@ -158,9 +166,10 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
-                String currentDateandTime = sdf.format(new Date());
+                final String currentDateandTime = sdf.format(new Date());
+
                 Message message = new Message(mMessageEditText.getText().toString(),
-                        currentDateandTime,null , 0 ,userPhone);
+                        currentDateandTime,null , 2,userPhone);
                 FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
                         .push().setValue(message);
                 mMessageEditText.setText("");
@@ -187,5 +196,52 @@ public class ChatActivity extends AppCompatActivity {
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {}
                 });
+    }
+    private void status(String status)
+    {
+        HashMap<String,Object> hashMap = new HashMap<>();
+        hashMap.put("UserStatues",status);
+        FirebaseDatabase.getInstance().getReference().child("users").child(
+                userPhone
+        ).updateChildren(hashMap);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        status("online");
+        readMessage = true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        messageAdapter.clear();
+        status("offline");
+        readMessage = false;
+    }
+    private void checkStatus()
+    {
+        FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        User user = dataSnapshot.getValue(User.class);
+                        if(user.getUserStatues().equals("online"))
+                        {
+                            friendStatus.setVisibility(View.VISIBLE);
+                        }
+                        else
+                        {
+                            friendStatus.setVisibility(View.GONE);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                }
+        );
     }
 }

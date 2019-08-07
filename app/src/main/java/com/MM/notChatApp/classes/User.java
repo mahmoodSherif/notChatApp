@@ -10,15 +10,26 @@ public class User {
     private String phone;
     private String UserPhotoUrl;
     private String UserBio;
+    private String UserStatues;
+
 
     public User(){
 
     }
-    public User(String userName, String userPhotoUrl, String phone, String userBio) {
+    public User(String userName, String userPhotoUrl, String phone, String userBio,String status) {
         UserName = userName;
         UserPhotoUrl = userPhotoUrl;
         this.phone = phone;
         UserBio = userBio;
+        UserStatues = status;
+    }
+
+    public String getUserStatues() {
+        return UserStatues;
+    }
+
+    public void setUserStatues(String userStatues) {
+        UserStatues = userStatues;
     }
 
     public String getUserName() {
@@ -55,7 +66,7 @@ public class User {
 
     public Task<Void>   addTODatabae(){
         DatabaseReference users = FirebaseDatabase.getInstance().getReference().child("users").child(phone);
-        return users.setValue(new User(UserName , UserPhotoUrl , phone , UserBio));
+        return users.setValue(new User(UserName , UserPhotoUrl , phone , UserBio,UserStatues));
     }
     public DatabaseReference getFormDataBase(String phone){
         return FirebaseDatabase.getInstance().getReference().child("users").child(phone);
