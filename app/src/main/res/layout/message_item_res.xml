@@ -8,7 +8,7 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#00A788"
+        android:background="@drawable/messages_left"
         android:orientation="vertical"
         android:padding="8dp">
 
@@ -16,16 +16,16 @@
             android:id="@+id/MessageRes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:maxWidth="200dp"
+            android:maxWidth="300dp"
             android:text="Message"
             android:textColor="#000"
-            android:textSize="25dp" />
+            android:textSize="18dp" />
 
         <TextView
             android:id="@+id/MessageTimeRes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="3:00 pm"
-            android:textSize="15dp" />
+            android:textSize="10dp" />
     </LinearLayout>
 </LinearLayout>

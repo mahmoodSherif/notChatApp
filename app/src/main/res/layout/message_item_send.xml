@@ -9,7 +9,7 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#E3E4E6"
+        android:background="@drawable/message_right"
         android:orientation="vertical"
         android:padding="8dp">
 
@@ -25,16 +25,16 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
                 android:padding="5dp"
-                android:src="@drawable/sentsmall" />
+                android:src="@drawable/sent16" />
 
             <TextView
                 android:id="@+id/MessageSend"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:maxWidth="200dp"
+                android:maxWidth="300dp"
                 android:text="Message"
                 android:textColor="#000"
-                android:textSize="25sp" />
+                android:textSize="18sp" />
         </LinearLayout>
 
         <TextView
@@ -42,6 +42,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="3:00 pm"
-            android:textSize="15sp" />
+            android:textSize="10sp" />
     </LinearLayout>
 </LinearLayout>

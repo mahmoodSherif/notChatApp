@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -51,7 +52,7 @@ public class ChatActivity extends AppCompatActivity {
     private EditText mMessageEditText;
     private Button mSendButton;
     private ChildEventListener messagesListener;
-
+    boolean typing = false;
     // bar views
     private TextView BarfriendName;
     private CircleImageView BarFriendImage;
@@ -108,6 +109,7 @@ public class ChatActivity extends AppCompatActivity {
                 .load(photo)
                 .into(BarFriendImage);
         checkStatus();
+        showTyping();
 
 
 
@@ -121,19 +123,63 @@ public class ChatActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.toString().trim().length() > 0) {
                     mSendButton.setEnabled(true);
+                    //setTypingIndecator(true,c);
                 } else {
                     mSendButton.setEnabled(false);
+                    //setTypingIndecator(false,c);
                 }
+
             }
 
             @Override
             public void afterTextChanged(Editable editable) {
+                if (!TextUtils.isEmpty(editable.toString())&&editable.toString().trim().length()==1) {
+                    typing = true;
+                    setTypingIndecator(true);
+                } else if(editable.toString().trim().length()==0 && typing){
+                    typing = false;
+                    setTypingIndecator(false);
+                }
             }
         });
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
 
         ensureChatId();
     }
+
+    private void setTypingIndecator(final Boolean typing) {
+        FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone)
+                .child(FirebaseAuth.getInstance()
+                                .getCurrentUser().getPhoneNumber())
+                .addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.getValue() == null)
+                        {
+                            FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
+                                    FirebaseAuth.getInstance()
+                                            .getCurrentUser().getPhoneNumber()).child("typing").setValue(typing);
+                        }
+                        else
+                        {
+                            HashMap<String,Object> hashMap = new HashMap<>();
+                            hashMap.put("typing",typing);
+                            FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
+                                    FirebaseAuth.getInstance()
+                                            .getCurrentUser().getPhoneNumber()).updateChildren(hashMap);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                }
+        );
+
+    }
+
     private void ensureChatId(){
         FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -234,6 +280,23 @@ public class ChatActivity extends AppCompatActivity {
                         {
                             friendStatus.setVisibility(View.GONE);
                         }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                }
+        );
+    }
+    private void showTyping()
+    {
+        FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child("typing").addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.getValue().equals(true))
+                            friendStatus.setText("typing...");
                     }
 
                     @Override

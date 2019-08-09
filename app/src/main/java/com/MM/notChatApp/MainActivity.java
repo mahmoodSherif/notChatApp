@@ -70,13 +70,11 @@ public class MainActivity extends AppCompatActivity {
     //adapter
     MessagesListAdapter messagesListAdapter;
     FirebaseAuth mfirebaseAuth;
-    // private ProgressBar mProgressBar;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference chatListRef;
     private ChildEventListener childEventListener;
     private ChildEventListener MessagegsEventListener;
-    private ProgressBar mainActivityProgressBar;
     private SwipeMenuCreator creator;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
 
         MainListView = findViewById(R.id.listView);
         FloatingActionButton fab = findViewById(R.id.fab);
-        mainActivityProgressBar = findViewById(R.id.mainActivityProgressBar);
 
         List<User> usersList = new ArrayList<>();
         messagesListAdapter = new MessagesListAdapter(this, R.layout.main_listview_item, usersList);
@@ -202,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                         Message message = dataSnapshot.getValue(Message.class);
                         final String LastMessage = message.getText();
+                        
                         //get user data
                         FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
                                 new ValueEventListener() {
