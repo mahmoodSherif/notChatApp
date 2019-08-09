@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -35,6 +34,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -99,12 +99,12 @@ public class ChatActivity extends AppCompatActivity {
         mSendButton = (Button) findViewById(R.id.sendButton);
 
         List<Message> messages = new ArrayList<>();
-        messageAdapter = new MessageAdapter(ChatActivity.this,R.layout.message_item,messages);
+        messageAdapter = new MessageAdapter(ChatActivity.this,R.layout.message_item_res,messages);
         messagesListView.setAdapter(messageAdapter);
 
         // set friend info
         BarfriendName.setText(friendname);
-        Glide.with(BarFriendImage.getContext())
+        Glide.with(ChatActivity.this)
                 .load(photo)
                 .into(BarFriendImage);
         checkStatus();
@@ -165,11 +165,10 @@ public class ChatActivity extends AppCompatActivity {
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
-                final String currentDateandTime = sdf.format(new Date());
 
+                SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                 Message message = new Message(mMessageEditText.getText().toString(),
-                        currentDateandTime,null , 2,userPhone);
+                        Time.format(new Date())  ,null , 2,userPhone);
                 FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
                         .push().setValue(message);
                 mMessageEditText.setText("");
@@ -183,7 +182,7 @@ public class ChatActivity extends AppCompatActivity {
                     @Override
                     public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                         LayoutInflater inflater = getLayoutInflater();
-                        //View view = inflater.inflate(R.layout.message_item,null);
+                        //View view = inflater.inflate(R.layout.message_item_res,null);
                         Message message = dataSnapshot.getValue(Message.class);
                         messageAdapter.add(message);
                     }

@@ -60,7 +60,7 @@ public class setUserNameForFirstTime extends AppCompatActivity {
         firstSetProBar = findViewById(R.id.firstSetProBar);
         firstSetProBar.setVisibility(View.INVISIBLE);
 
-        Glide.with(userPhoto.getContext())
+        Glide.with(setUserNameForFirstTime.this)
                 .load(photo)
                 .into(userPhoto);
 
@@ -153,7 +153,7 @@ public class setUserNameForFirstTime extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK){
             photo = data.getData();
-            Glide.with(userPhoto.getContext())
+            Glide.with(setUserNameForFirstTime.this)
                     .load(photo)
                     .into(userPhoto);
         }

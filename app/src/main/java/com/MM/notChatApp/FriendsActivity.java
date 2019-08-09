@@ -2,6 +2,8 @@ package com.MM.notChatApp;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.ContentResolver;
@@ -13,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -33,6 +36,7 @@ import java.util.HashMap;
 
 public class FriendsActivity extends AppCompatActivity {
 
+    final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 55;
     //counter for process bar
     int counter = 0;
     ListView FriendsList;
@@ -47,8 +51,35 @@ public class FriendsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends);
-        progressBar = findViewById(R.id.progressBar);
-        progressBar.setVisibility(ProgressBar.INVISIBLE);
+
+        // ask for
+        if (ContextCompat.checkSelfPermission(FriendsActivity.this,
+                Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(FriendsActivity.this,
+                    Manifest.permission.READ_CONTACTS)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(FriendsActivity.this,
+                        new String[]{Manifest.permission.READ_CONTACTS},
+                        MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        } else {
+            // Permission has already been granted
+        }
+
+
+        progressBar = findViewById(R.id.FriendsListProgressBar);
         firebaseDatabase = FirebaseDatabase.getInstance();
         FriendsList = findViewById(R.id.FriendsList);
         FriendsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -74,11 +105,26 @@ public class FriendsActivity extends AppCompatActivity {
        // }
         //Toast.makeText(getApplicationContext(),String.valueOf(numbers.size()),Toast.LENGTH_SHORT).show();
         for(int i=0;i<numbers.size();i++) {
-            read(numbers.get(i));
+            if(checkIfNumVal(numbers.get(i))){
+                Log.v("NEWEE" , "new one ");
+                read(numbers.get(i));
+            }
             counter++;
         }
 
     }
+
+    private boolean checkIfNumVal(String s) {
+        for(int i = 0;i<s.length();i++){
+            if ((s.charAt(i) == '+' || ('0' <= s.charAt(i) && s.charAt(i) <= '9') || s.charAt(i) == ' ')) {
+
+            }else{
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void read(String number)
     {
         databaseReference = firebaseDatabase.getReference().child("users").child(number);
@@ -117,7 +163,7 @@ public class FriendsActivity extends AppCompatActivity {
     public void getFromContacts() {
         Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
         ContentResolver cr = getContentResolver();
-        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+//        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         String[] projection = new String[]{ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
                 ContactsContract.CommonDataKinds.Phone.NUMBER};
         Cursor names = getContentResolver().query(uri, projection, null, null, null);
@@ -134,14 +180,23 @@ public class FriendsActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
                                            int[] grantResults) {
-        if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission is granted
-                Toast.makeText(this, "great", Toast.LENGTH_SHORT).show();
-
-            } else {
-                Toast.makeText(this, "Until you grant the permission, we cannot display the names", Toast.LENGTH_SHORT).show();
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                } else {
+                    finish();
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
             }
+
+            // other 'case' lines to check for other
+            // permissions this app might request.
         }
     }
     private void status(String status)
@@ -165,4 +220,5 @@ public class FriendsActivity extends AppCompatActivity {
         adapter.clear();
         status("offline");
     }
+
 }

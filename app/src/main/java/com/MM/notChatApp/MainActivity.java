@@ -27,6 +27,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.FirebaseUserMetadata;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -75,19 +76,63 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference chatListRef;
     private ChildEventListener childEventListener;
     private ChildEventListener MessagegsEventListener;
-
+    private ProgressBar mainActivityProgressBar;
+    private SwipeMenuCreator creator;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         firebaseDatabase = FirebaseDatabase.getInstance();
-         MainListView = (SwipeMenuListView) findViewById(R.id.listView);
+
+        MainListView = findViewById(R.id.listView);
+        FloatingActionButton fab = findViewById(R.id.fab);
+        mainActivityProgressBar = findViewById(R.id.mainActivityProgressBar);
+
         List<User> usersList = new ArrayList<>();
         messagesListAdapter = new MessagesListAdapter(this, R.layout.main_listview_item, usersList);
         MainListView.setAdapter(messagesListAdapter);
+        MainListView.setEmptyView(findViewById(R.id.layoutEmpty));
 
-        SwipeMenuCreator creator = new SwipeMenuCreator() {
+        setUpSwipeMenuCreator();
+
+        MainListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                User user = (User) adapterView.getItemAtPosition(i);
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                intent.putExtra("username", user.getUserName());
+                intent.putExtra("phone", user.getPhone());
+                intent.putExtra("userPhoto", user.getUserPhotoUrl());
+                startActivity(intent);
+            }
+        });
+
+        mfirebaseAuth = FirebaseAuth.getInstance();
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, FriendsActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    getChatList();
+                } else {
+                    signIn();
+
+                }
+            }
+        };
+    }
+
+
+    private void setUpSwipeMenuCreator(){
+        creator = new SwipeMenuCreator() {
 
             @Override
             public void create(SwipeMenu menu) {
@@ -123,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-// set creator
+        // set creator
         MainListView.setMenuCreator(creator);
         MainListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
             @Override
@@ -136,89 +181,12 @@ public class MainActivity extends AppCompatActivity {
                     case 1:
                         // delete
                         Toast.makeText(getApplicationContext(),"one",Toast.LENGTH_SHORT).show();
-                        deleteChat(messagesListAdapter.getItem(position),position);
                         break;
                 }
                 // false : close the menu; true : not close the menu
                 return false;
             }
         });
-
-        MainListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                User user = (User) adapterView.getItemAtPosition(i);
-                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-                intent.putExtra("username", user.getUserName());
-                intent.putExtra("phone", user.getPhone());
-                intent.putExtra("userPhoto", user.getUserPhotoUrl());
-                startActivity(intent);
-            }
-        });
-
-        mfirebaseAuth = FirebaseAuth.getInstance();
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, FriendsActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    Toast.makeText(MainActivity.this, "HI " + mfirebaseAuth.getCurrentUser().getDisplayName(), Toast.LENGTH_SHORT).show();
-                    getChatList();
-                } else {
-                    signIn();
-
-                }
-            }
-        };
-    //    CheckConnection();
-    }
-    private void deleteChat(final User user,int position)
-    {
-
-        firebaseDatabase.getReference().child("chatList").child(user.getPhone()).addListenerForSingleValueEvent(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(!dataSnapshot.hasChild(mfirebaseAuth.getCurrentUser().getPhoneNumber()))
-                        {
-                            firebaseDatabase.getReference().child("chatList").child(mfirebaseAuth.getCurrentUser().getPhoneNumber()).addListenerForSingleValueEvent(
-                                    new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            String chatId = dataSnapshot.getValue(String.class);
-                                            firebaseDatabase.getReference().child("chats").child(chatId)
-                                                    .removeValue();
-
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                        }
-                                    }
-                            );
-                        }
-                        firebaseDatabase.getReference().child("chatList").child(mfirebaseAuth.getCurrentUser().getPhoneNumber())
-                                .child(user.getPhone()).removeValue();
-                        messagesListAdapter.remove(user);
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                }
-        );
-
     }
 
     private void getChatList() {
@@ -323,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         mfirebaseAuth.addAuthStateListener(mAuthStateListener);
-        status("online");
+//        status("online");
     }
 
     @Override
@@ -333,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
             mfirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
         messagesListAdapter.clear();
-        status("offline");
+  //      status("offline");
     }
 
     @Override
@@ -377,10 +345,16 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
-                if (FirebaseAuth.getInstance().getCurrentUser().getDisplayName() == null) {
+                FirebaseUserMetadata metadata = FirebaseAuth.getInstance().getCurrentUser().getMetadata();
+                if (metadata.getCreationTimestamp() == metadata.getLastSignInTimestamp()) {
+                    // The user is new, show them a fancy intro screen!
+                    Toast.makeText(MainActivity.this, "first Time", Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(MainActivity.this, setUserNameForFirstTime.class);
                     startActivity(intent);
+                } else {
+                    Toast.makeText(MainActivity.this, "NOT first Time", Toast.LENGTH_LONG).show();
                 }
+
             } else {
                 finish();
             }
@@ -390,13 +364,13 @@ public class MainActivity extends AppCompatActivity {
     //auth functions
     private void signIn() {
         List<AuthUI.IdpConfig> providers = Arrays.asList(
-                new AuthUI.IdpConfig.PhoneBuilder().build(),
-                new AuthUI.IdpConfig.EmailBuilder().build()
+                new AuthUI.IdpConfig.PhoneBuilder().build()
         );
 
         startActivityForResult(
                 AuthUI.getInstance()
                         .createSignInIntentBuilder()
+                        .setIsSmartLockEnabled(false)
                         .setAvailableProviders(providers)
                         .build(),
                 RC_SIGN_IN);
@@ -413,12 +387,16 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
+
+
     public boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
+
+
     public void CheckConnection(String phone)
     {
         final FirebaseDatabase database = FirebaseDatabase.getInstance();

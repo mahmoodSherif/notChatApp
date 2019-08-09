@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -22,7 +21,6 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -67,6 +65,35 @@ public class userInfo extends AppCompatActivity {
         saveBtn = findViewById(R.id.saveBtn);
         progressBar = findViewById(R.id.probar);
 
+        preSetDate();
+        setSaveBtn();
+
+        // set info
+        userImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/jpeg");
+                intent.putExtra(Intent.EXTRA_LOCAL_ONLY , true);
+                startActivityForResult(Intent.createChooser(intent ,  "Complete action using") , RC_PHOTO_PICKER);
+            }
+        });
+
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK){
+            photo = data.getData();
+            Glide.with(userInfo.this)
+                    .load(photo)
+                    .into(userImage);
+            isCh = true;
+        }
+    }
+    private void preSetDate(){
         FirebaseDatabase.getInstance().getReference().child("users").child(phone).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -78,7 +105,7 @@ public class userInfo extends AppCompatActivity {
                     @Override
                     public void onSuccess(Uri uri) {
                         photo = uri;
-                        Glide.with(userImage.getContext())
+                        Glide.with(userInfo.this)
                                 .load(photo)
                                 .into(userImage);
                         progressBar.setVisibility(View.INVISIBLE);
@@ -91,16 +118,8 @@ public class userInfo extends AppCompatActivity {
 
             }
         });
-        // set info
-        userImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/jpeg");
-                intent.putExtra(Intent.EXTRA_LOCAL_ONLY , true);
-                startActivityForResult(Intent.createChooser(intent ,  "Complete action using") , RC_PHOTO_PICKER);
-            }
-        });
+    }
+    private void setSaveBtn(){
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -159,18 +178,5 @@ public class userInfo extends AppCompatActivity {
             }
 
         });
-
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK){
-            photo = data.getData();
-            Glide.with(userImage.getContext())
-                    .load(photo)
-                    .into(userImage);
-            isCh = true;
-        }
     }
 }
