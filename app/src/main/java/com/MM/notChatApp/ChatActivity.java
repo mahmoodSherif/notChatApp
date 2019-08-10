@@ -123,10 +123,8 @@ public class ChatActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.toString().trim().length() > 0) {
                     mSendButton.setEnabled(true);
-                    //setTypingIndecator(true,c);
                 } else {
                     mSendButton.setEnabled(false);
-                    //setTypingIndecator(false,c);
                 }
 
             }
@@ -295,8 +293,10 @@ public class ChatActivity extends AppCompatActivity {
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.getValue().equals(true))
-                            friendStatus.setText("typing...");
+                        if (dataSnapshot.getValue() != null) {
+                            if (dataSnapshot.getValue().equals(true))
+                                friendStatus.setText("typing...");
+                        }
                     }
 
                     @Override
@@ -306,4 +306,5 @@ public class ChatActivity extends AppCompatActivity {
                 }
         );
     }
+
 }
