@@ -36,7 +36,7 @@ public class MessagesListAdapter extends ArrayAdapter<User> {
                 .load(user.getUserPhotoUrl())
                 .into(friendImage);
         friendName.setText(user.getUserName());
-        friendLastMessage.setText(user.getUserBio());
+        friendLastMessage.setText(user.getLastMessage());
 
         return convertView;
     }

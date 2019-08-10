@@ -11,7 +11,7 @@ public class User {
     private String UserPhotoUrl;
     private String UserBio;
     private String UserStatues;
-
+    private String LastMessage;
 
     public User(){
 
@@ -22,6 +22,14 @@ public class User {
         this.phone = phone;
         UserBio = userBio;
         UserStatues = status;
+    }
+    public User(String userName, String userPhotoUrl, String phone, String userBio,String status,String lastMessage) {
+        UserName = userName;
+        UserPhotoUrl = userPhotoUrl;
+        this.phone = phone;
+        UserBio = userBio;
+        UserStatues = status;
+        lastMessage = lastMessage;
     }
 
     public String getUserStatues() {
@@ -72,4 +80,11 @@ public class User {
         return FirebaseDatabase.getInstance().getReference().child("users").child(phone);
     }
 
+    public String getLastMessage() {
+        return LastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        LastMessage = lastMessage;
+    }
 }

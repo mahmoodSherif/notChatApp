@@ -55,7 +55,6 @@ public class userInfo extends AppCompatActivity {
         setContentView(R.layout.activity_user_info);
         //final LinearLayout layout = findViewById(R.id.layout);
         curFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-
         phone = curFirebaseUser.getPhoneNumber();
 
         userImage = findViewById(R.id.userPhoto);
@@ -65,7 +64,25 @@ public class userInfo extends AppCompatActivity {
         saveBtn = findViewById(R.id.saveBtn);
         progressBar = findViewById(R.id.probar);
 
-        preSetDate();
+        Intent intent = getIntent();
+        if(intent!=null && intent.getExtras()!=null)
+        {
+            String FriendName = intent.getStringExtra("name");
+            String FriendPhoto = intent.getStringExtra("photo");
+            String FriendBio = intent.getStringExtra("bio");
+            String phone = intent.getStringExtra("phone");
+            Glide.with(userInfo.this)
+                    .load(FriendPhoto)
+                    .into(userImage);
+            usernameTX.setText(FriendName);
+            userBioTX.setText(FriendBio);
+            userPhoneTX.setText(phone);
+            saveBtn.setVisibility(View.GONE);
+            progressBar.setVisibility(View.GONE);
+        }
+        else {
+            preSetDate();
+        }
         setSaveBtn();
 
         // set info

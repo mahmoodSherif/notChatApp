@@ -51,7 +51,6 @@ public class FriendsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends);
-
         // ask for
         if (ContextCompat.checkSelfPermission(FriendsActivity.this,
                 Manifest.permission.READ_CONTACTS)

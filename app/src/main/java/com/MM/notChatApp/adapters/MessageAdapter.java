@@ -42,9 +42,14 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.message_item_send, parent, false);
             TextView messageTextView = convertView.findViewById(R.id.MessageSend);
             TextView timeTextView = convertView.findViewById(R.id.MessageTimeSend);
+            ImageView status = convertView.findViewById(R.id.MessageStatues);
 
             messageTextView.setText(message.getText());
             timeTextView.setText(message.getTime());
+            if(message.getStatues() == 3)
+            {
+                status.setImageResource(R.drawable.read16);
+            }
 
             return convertView;
         }

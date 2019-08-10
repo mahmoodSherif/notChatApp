@@ -110,7 +110,7 @@ public class ChatActivity extends AppCompatActivity {
                 .into(BarFriendImage);
         checkStatus();
         showTyping();
-
+        setSeenIndecator(true);
 
 
         // Enable Send button when there's text to send
@@ -145,6 +145,37 @@ public class ChatActivity extends AppCompatActivity {
         ensureChatId();
     }
 
+    private void setSeenIndecator(final Boolean seen)
+    {
+        FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone)
+                .child(FirebaseAuth.getInstance()
+                        .getCurrentUser().getPhoneNumber()).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.getValue() == null)
+                        {
+                            FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
+                                    FirebaseAuth.getInstance()
+                                            .getCurrentUser().getPhoneNumber()).child("seen").setValue(seen);
+                        }
+                        else
+                        {
+                            HashMap<String,Object> hashMap = new HashMap<>();
+                            hashMap.put("seen",seen);
+                            FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
+                                    FirebaseAuth.getInstance()
+                                            .getCurrentUser().getPhoneNumber()).updateChildren(hashMap);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                }
+        );
+    }
     private void setTypingIndecator(final Boolean typing) {
         FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone)
                 .child(FirebaseAuth.getInstance()
@@ -210,11 +241,42 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
-                Message message = new Message(mMessageEditText.getText().toString(),
-                        Time.format(new Date())  ,null , 2,userPhone);
-                FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
-                        .push().setValue(message);
+                final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
+                FirebaseDatabase.getInstance().getReference().child("chatList")
+                        .child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber())
+                        .child(friendPhone).child("seen").addListenerForSingleValueEvent(
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                if(dataSnapshot.getValue()!=null)
+                                {
+                                    if(dataSnapshot.getValue().equals(true))
+                                    {
+
+                                        Message message = new Message(mMessageEditText.getText().toString(),
+                                                Time.format(new Date())  ,null , 3,userPhone);
+
+                                        FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
+                                                .push().setValue(message);
+                                    }
+                                    else
+                                    {
+                                        Message message = new Message(mMessageEditText.getText().toString(),
+                                                Time.format(new Date())  ,null , 2,userPhone);
+
+                                        FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
+                                                .push().setValue(message);
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        }
+                );
+
                 mMessageEditText.setText("");
             }
         });
@@ -253,6 +315,7 @@ public class ChatActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         status("online");
+        setSeenIndecator(true);
         readMessage = true;
     }
 
@@ -261,6 +324,7 @@ public class ChatActivity extends AppCompatActivity {
         super.onPause();
         messageAdapter.clear();
         status("offline");
+        setSeenIndecator(false);
         readMessage = false;
     }
     private void checkStatus()

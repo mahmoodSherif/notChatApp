@@ -173,7 +173,13 @@ public class MainActivity extends AppCompatActivity {
                 switch (index) {
                     case 0:
                         // open
-                        Toast.makeText(getApplicationContext(),"zero",Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(MainActivity.this,userInfo.class);
+                        User user = messagesListAdapter.getItem(position);
+                        intent.putExtra("photo",user.getUserPhotoUrl());
+                        intent.putExtra("name",user.getUserName());
+                        intent.putExtra("bio",user.getUserBio());
+                        intent.putExtra("phone",user.getPhone());
+                        startActivity(intent);
                         break;
                     case 1:
                         // delete
@@ -199,14 +205,14 @@ public class MainActivity extends AppCompatActivity {
                     public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                         Message message = dataSnapshot.getValue(Message.class);
                         final String LastMessage = message.getText();
-                        
+
                         //get user data
                         FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
                                 new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                         User friendUser = dataSnapshot.getValue(User.class);
-                                        friendUser.setUserBio(LastMessage);
+                                        friendUser.setLastMessage(LastMessage);
                                         int check = 0;
                                         for (int i = 0; i < messagesListAdapter.getCount(); i++) {
                                             User myuser = messagesListAdapter.getItem(i);
