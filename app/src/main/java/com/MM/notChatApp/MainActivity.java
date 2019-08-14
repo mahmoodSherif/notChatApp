@@ -45,6 +45,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.text.TextUtils;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -53,6 +54,7 @@ import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -312,6 +314,29 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuItem item = menu.findItem(R.id.searchMenu);
+        SearchView searchView = (SearchView) item.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                if(TextUtils.isEmpty(s))
+                {
+                    messagesListAdapter.getFilter().filter("");
+                    MainListView.clearTextFilter();
+                }
+                else {
+                    messagesListAdapter.getFilter().filter(s);
+                    messagesListAdapter.notifyDataSetChanged();
+                    MainListView.setFilterText(s);
+                }
+                return true;
+            }
+        });
         return true;
     }
 
@@ -324,11 +349,6 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
-        }
-        if (id == R.id.addNewFriend) {
-            Intent intent = new Intent(MainActivity.this, FriendsActivity.class);
-            startActivity(intent);
             return true;
         }
         if (id == R.id.signOut) {
