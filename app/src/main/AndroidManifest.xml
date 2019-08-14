@@ -4,7 +4,9 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
+        android:name=".notChatApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -13,11 +15,11 @@
         android:theme="@style/AppTheme">
         <activity android:name=".user.setUserNameForFirstTime"></activity>
         <activity android:name=".user.userInfo" />
-        <activity android:name=".FriendsActivity" />
-        <activity android:name=".ChatActivity" />
+        <activity android:name=".activities.FriendsActivity" />
+        <activity android:name=".activities.ChatActivity" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme">
             <intent-filter>

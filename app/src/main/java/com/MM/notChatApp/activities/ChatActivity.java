@@ -1,4 +1,4 @@
-package com.MM.notChatApp;
+package com.MM.notChatApp.activities;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,6 +21,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.MessageAdapter;
 import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
@@ -35,7 +36,6 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -210,7 +210,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void ensureChatId(){
-        FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
+        FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("id")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -219,9 +219,9 @@ public class ChatActivity extends AppCompatActivity {
                             DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference().child("chats").push();
                             String chatId = chatRef.getKey();
                             FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
-                                    .setValue(chatId);
+                                    .child("id").setValue(chatId);
                             FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone)
-                                    .setValue(chatId);
+                                    .child("id").setValue(chatId);
                             CurChatId = chatId;
                         }else{
                             CurChatId = dataSnapshot.getValue().toString();
@@ -302,14 +302,7 @@ public class ChatActivity extends AppCompatActivity {
                     public void onCancelled(@NonNull DatabaseError databaseError) {}
                 });
     }
-    private void status(String status)
-    {
-        HashMap<String,Object> hashMap = new HashMap<>();
-        hashMap.put("UserStatues",status);
-        FirebaseDatabase.getInstance().getReference().child("users").child(
-                userPhone
-        ).updateChildren(hashMap);
-    }
+
 
     @Override
     protected void onResume() {

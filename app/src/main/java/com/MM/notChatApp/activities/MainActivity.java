@@ -8,6 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 
+import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.MessagesListAdapter;
 import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
@@ -54,7 +55,6 @@ import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.SearchView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 final String friendPhone = dataSnapshot.getKey();
-                final String chatId = dataSnapshot.getValue(String.class);
+                final String chatId = dataSnapshot.child("id").getValue(String.class);
                 //get last message sent
                 MessagegsEventListener = new ChildEventListener() {
                     @Override
@@ -314,29 +314,6 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        MenuItem item = menu.findItem(R.id.searchMenu);
-        SearchView searchView = (SearchView) item.getActionView();
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String s) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String s) {
-                if(TextUtils.isEmpty(s))
-                {
-                    messagesListAdapter.getFilter().filter("");
-                    MainListView.clearTextFilter();
-                }
-                else {
-                    messagesListAdapter.getFilter().filter(s);
-                    messagesListAdapter.notifyDataSetChanged();
-                    MainListView.setFilterText(s);
-                }
-                return true;
-            }
-        });
         return true;
     }
 
@@ -349,6 +326,11 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            return true;
+        }
+        if (id == R.id.addNewFriend) {
+            Intent intent = new Intent(MainActivity.this, FriendsActivity.class);
+            startActivity(intent);
             return true;
         }
         if (id == R.id.signOut) {
