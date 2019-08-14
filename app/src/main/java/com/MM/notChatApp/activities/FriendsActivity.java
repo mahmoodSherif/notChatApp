@@ -1,4 +1,4 @@
-package com.MM.notChatApp;
+package com.MM.notChatApp.activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,20 +11,17 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
+import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.friendsAdapter;
 import com.MM.notChatApp.classes.User;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,7 +29,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class FriendsActivity extends AppCompatActivity {
 
@@ -199,26 +195,16 @@ public class FriendsActivity extends AppCompatActivity {
             // permissions this app might request.
         }
     }
-    private void status(String status)
-    {
-        HashMap<String,Object> hashMap = new HashMap<>();
-        hashMap.put("UserStatues",status);
-        FirebaseDatabase.getInstance().getReference().child("users").child(
-                FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
-        ).updateChildren(hashMap);
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
-        status("online");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         adapter.clear();
-        status("offline");
     }
 
 }

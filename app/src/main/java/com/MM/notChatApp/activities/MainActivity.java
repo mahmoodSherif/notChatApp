@@ -1,4 +1,4 @@
-package com.MM.notChatApp;
+package com.MM.notChatApp.activities;
 
 import android.content.Context;
 import android.content.Intent;
@@ -8,10 +8,10 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 
+import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.MessagesListAdapter;
 import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
-import com.MM.notChatApp.dialogs.searchForNewFriend;
 import com.MM.notChatApp.user.setUserNameForFirstTime;
 import com.MM.notChatApp.user.userInfo;
 import com.baoyz.swipemenulistview.SwipeMenu;
@@ -19,13 +19,9 @@ import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.FirebaseUserMetadata;
 import com.google.firebase.database.ChildEventListener;
@@ -35,32 +31,21 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
-import com.hudomju.swipe.SwipeToDismissTouchListener;
-import com.hudomju.swipe.adapter.ListViewAdapter;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AbsListView;
-import android.widget.Adapter;
 import android.widget.AdapterView;
-import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -192,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 final String friendPhone = dataSnapshot.getKey();
-                final String chatId = dataSnapshot.getValue(String.class);
+                final String chatId = dataSnapshot.child("id").getValue(String.class);
                 //get last message sent
                 MessagegsEventListener = new ChildEventListener() {
                     @Override
@@ -227,22 +212,18 @@ public class MainActivity extends AppCompatActivity {
                                 }
                         );
                     }
-
                     @Override
                     public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
                     }
-
                     @Override
                     public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
 
                     }
-
                     @Override
                     public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
 
@@ -277,19 +258,11 @@ public class MainActivity extends AppCompatActivity {
                 .getInstance().getCurrentUser().getPhoneNumber()).addChildEventListener(childEventListener);
     }
 
-    private void status(String status) {
-        HashMap<String, Object> hashMap = new HashMap<>();
-        hashMap.put("UserStatues", status);
-        FirebaseDatabase.getInstance().getReference().child("users").child(
-                mfirebaseAuth.getCurrentUser().getPhoneNumber()
-        ).updateChildren(hashMap);
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
         mfirebaseAuth.addAuthStateListener(mAuthStateListener);
-//        status("online");
     }
 
     @Override
@@ -299,7 +272,6 @@ public class MainActivity extends AppCompatActivity {
             mfirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
         messagesListAdapter.clear();
-  //      status("offline");
     }
 
     @Override
