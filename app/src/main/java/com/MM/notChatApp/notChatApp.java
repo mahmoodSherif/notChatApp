@@ -3,6 +3,7 @@ package com.MM.notChatApp;
 import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
+import android.os.Handler;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -10,52 +11,93 @@ import androidx.annotation.Nullable;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class notChatApp extends Application implements Application.ActivityLifecycleCallbacks {
-    private void status(String status) {
+    private static void  status(String status) {
         HashMap<String,Object> hashMap = new HashMap<>();
         hashMap.put("UserStatues",status);
         FirebaseDatabase.getInstance().getReference().child("users").child(
                 FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
         ).updateChildren(hashMap);
     }
+
+    private static final AtomicBoolean applicationBackgrounded = new AtomicBoolean(true);
+    private static final long INTERVAL_BACKGROUND_STATE_CHANGE = 750L;
+    private static WeakReference<Activity> currentActivityReference;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        this.registerActivityLifecycleCallbacks(this);
     }
 
-    @Override
-    public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
+    private void determineForegroundStatus() {
+        if (applicationBackgrounded.get()) {
+            onEnterForeground();
+            applicationBackgrounded.set(false);
+        }
     }
 
-    @Override
-    public void onActivityStarted(@NonNull Activity activity) {
-
+    private void determineBackgroundStatus() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!applicationBackgrounded.get() && currentActivityReference == null) {
+                    applicationBackgrounded.set(true);
+                    onEnterBackground();
+                }
+            }
+        }, INTERVAL_BACKGROUND_STATE_CHANGE);
     }
 
-    @Override
-    public void onActivityResumed(@NonNull Activity activity) {
+    public static void onEnterForeground() {
         status("online");
+        //This is where you'll handle logic you want to execute when your application enters the foreground
     }
 
-    @Override
-    public void onActivityPaused(@NonNull Activity activity) {
+    public static void onEnterBackground() {
         status("offline");
+        //This is where you'll handle logic you want to execute when your application enters the background
     }
 
     @Override
-    public void onActivityStopped(@NonNull Activity activity) {
-
+    public void onActivityResumed(Activity activity) {
+        notChatApp.currentActivityReference = new WeakReference<>(activity);
+        determineForegroundStatus();
     }
 
     @Override
-    public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle bundle) {
-
+    public void onActivityPaused(Activity activity) {
+        notChatApp.currentActivityReference = null;
+        determineBackgroundStatus();
     }
 
     @Override
-    public void onActivityDestroyed(@NonNull Activity activity) {
+    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+        // if you want to do something when every activity is created, do it here
+    }
 
+    @Override
+    public void onActivityStarted(Activity activity) {
+        // if you want to do something when every activity is started, do it here
+    }
+
+    @Override
+    public void onActivityStopped(Activity activity) {
+        // if you want to do something when every activity is stopped, do it here
+    }
+
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+        // if you want to do something when an activity saves its instance state, do it here
+    }
+
+    @Override
+    public void onActivityDestroyed(Activity activity) {
+        // if you want to do something when every activity is destroyed, do it here
     }
 }
+

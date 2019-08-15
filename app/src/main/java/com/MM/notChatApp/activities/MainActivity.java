@@ -38,6 +38,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.hudomju.swipe.SwipeToDismissTouchListener;
 import com.hudomju.swipe.adapter.ListViewAdapter;
 
@@ -85,7 +86,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         firebaseDatabase = FirebaseDatabase.getInstance();
-
+        String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+        FirebaseMessaging.getInstance().subscribeToTopic("user_"+phone.substring(1));
         MainListView = findViewById(R.id.listView);
         FloatingActionButton fab = findViewById(R.id.fab);
 
@@ -237,22 +239,18 @@ public class MainActivity extends AppCompatActivity {
                                 }
                         );
                     }
-
                     @Override
                     public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
                     }
-
                     @Override
                     public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
 
                     }
-
                     @Override
                     public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
 
@@ -287,19 +285,11 @@ public class MainActivity extends AppCompatActivity {
                 .getInstance().getCurrentUser().getPhoneNumber()).addChildEventListener(childEventListener);
     }
 
-    private void status(String status) {
-        HashMap<String, Object> hashMap = new HashMap<>();
-        hashMap.put("UserStatues", status);
-        FirebaseDatabase.getInstance().getReference().child("users").child(
-                mfirebaseAuth.getCurrentUser().getPhoneNumber()
-        ).updateChildren(hashMap);
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
         mfirebaseAuth.addAuthStateListener(mAuthStateListener);
-//        status("online");
     }
 
     @Override
@@ -309,7 +299,6 @@ public class MainActivity extends AppCompatActivity {
             mfirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
         messagesListAdapter.clear();
-  //      status("offline");
     }
 
     @Override
