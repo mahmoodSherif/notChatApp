@@ -31,6 +31,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -66,7 +67,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         firebaseDatabase = FirebaseDatabase.getInstance();
-
+        String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+        FirebaseMessaging.getInstance().subscribeToTopic("user_"+phone.substring(1));
         MainListView = findViewById(R.id.listView);
         FloatingActionButton fab = findViewById(R.id.fab);
 
