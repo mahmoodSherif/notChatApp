@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.MessageAdapter;
@@ -240,7 +241,7 @@ public class ChatActivity extends AppCompatActivity {
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                final String text = mMessageEditText.getText().toString();
                 final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                 FirebaseDatabase.getInstance().getReference().child("chatList")
                         .child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber())
@@ -253,7 +254,7 @@ public class ChatActivity extends AppCompatActivity {
                                     if(dataSnapshot.getValue().equals(true))
                                     {
 
-                                        Message message = new Message(mMessageEditText.getText().toString(),
+                                        Message message = new Message(text,
                                                 Time.format(new Date())  ,null , 3,userPhone);
 
                                         FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
@@ -261,7 +262,7 @@ public class ChatActivity extends AppCompatActivity {
                                     }
                                     else
                                     {
-                                        Message message = new Message(mMessageEditText.getText().toString(),
+                                        Message message = new Message(text,
                                                 Time.format(new Date())  ,null , 2,userPhone);
 
                                         FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
@@ -276,7 +277,6 @@ public class ChatActivity extends AppCompatActivity {
                             }
                         }
                 );
-
                 mMessageEditText.setText("");
             }
         });
@@ -307,7 +307,6 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        status("online");
         setSeenIndecator(true);
         readMessage = true;
     }
@@ -316,7 +315,6 @@ public class ChatActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         messageAdapter.clear();
-        status("offline");
         setSeenIndecator(false);
         readMessage = false;
     }
@@ -333,7 +331,7 @@ public class ChatActivity extends AppCompatActivity {
                         }
                         else
                         {
-                            friendStatus.setVisibility(View.GONE);
+                            //friendStatus.setVisibility(View.GONE);
                         }
                     }
 
@@ -346,13 +344,20 @@ public class ChatActivity extends AppCompatActivity {
     }
     private void showTyping()
     {
-        FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child("typing").addListenerForSingleValueEvent(
+        FirebaseDatabase.getInstance().getReference().child("chatList").child(
+                FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
+        ).child(friendPhone).child("typing").addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.getValue() != null) {
-                            if (dataSnapshot.getValue().equals(true))
-                                friendStatus.setText("typing...");
+                            if (dataSnapshot.getValue().equals(true)) {
+                                friendStatus.setVisibility(View.VISIBLE);
+                                friendStatus.setText(R.string.typing);
+                            }
+                            else
+                            {
+                            }
                         }
                     }
 

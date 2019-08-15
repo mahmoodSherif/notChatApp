@@ -1,4 +1,4 @@
-package com.MM.notChatApp;
+package com.MM.notChatApp.activities;
 
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +9,8 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 
 import com.MM.notChatApp.R;
+import com.MM.notChatApp.activities.ChatActivity;
+import com.MM.notChatApp.activities.FriendsActivity;
 import com.MM.notChatApp.adapters.MessagesListAdapter;
 import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
@@ -326,11 +328,6 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
-        }
-        if (id == R.id.addNewFriend) {
-            Intent intent = new Intent(MainActivity.this, FriendsActivity.class);
-            startActivity(intent);
             return true;
         }
         if (id == R.id.signOut) {
