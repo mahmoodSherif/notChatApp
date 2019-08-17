@@ -72,6 +72,7 @@ public class ChatActivity extends AppCompatActivity {
     Uri photo = null;
     String friendname = null;
     boolean readMessage = false;
+    boolean Online = false;
 
 
     @Override
@@ -274,6 +275,7 @@ public class ChatActivity extends AppCompatActivity {
                                         Message message = new Message(text,
                                                 Time.format(new Date())  ,null , 3,userPhone);
 
+                                        ChatActivity.this.notify(message ,friendPhone );
                                         FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
                                                 .push().setValue(message);
                                     }
@@ -282,6 +284,7 @@ public class ChatActivity extends AppCompatActivity {
                                         Message message = new Message(text,
                                                 Time.format(new Date())  ,null , 2,userPhone);
 
+                                        ChatActivity.this.notify(message ,friendPhone );
                                         FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
                                                 .push().setValue(message);
                                     }
@@ -294,12 +297,6 @@ public class ChatActivity extends AppCompatActivity {
                             }
                         }
                 );
-                SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
-                Message message = new Message(mMessageEditText.getText().toString(),
-                        Time.format(new Date())  ,null , 2,userPhone);
-                ChatActivity.this.notify(message ,friendPhone );
-                FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
-                        .push().setValue(message);
                 mMessageEditText.setText("");
             }
         });
@@ -351,10 +348,12 @@ public class ChatActivity extends AppCompatActivity {
                         if(user.getUserStatues().equals("online"))
                         {
                             friendStatus.setVisibility(View.VISIBLE);
+                            Online = true;
                         }
                         else
                         {
-                            //friendStatus.setVisibility(View.GONE);
+                            friendStatus.setVisibility(View.GONE);
+                            Online = false;
                         }
                     }
 
@@ -375,11 +374,15 @@ public class ChatActivity extends AppCompatActivity {
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.getValue() != null) {
                             if (dataSnapshot.getValue().equals(true)) {
+                                Toast.makeText(getApplicationContext(),"hola",Toast.LENGTH_SHORT).show();
                                 friendStatus.setVisibility(View.VISIBLE);
                                 friendStatus.setText(R.string.typing);
                             }
                             else
                             {
+                                if(Online) {
+                                    friendStatus.setText("Online");
+                                }
                             }
                         }
                     }
