@@ -65,7 +65,7 @@ public class ChatActivity extends AppCompatActivity {
 
     // firebase
     private FirebaseDatabase mFirebaseDatabase;
-    private DatabaseReference mDatabaseReference;
+    private DatabaseReference chatRef;
     // cur chat info
     String userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
     String friendPhone = null;
@@ -73,6 +73,10 @@ public class ChatActivity extends AppCompatActivity {
     String friendname = null;
     boolean readMessage = false;
     boolean Online = false;
+
+    // maps
+    private HashMap<DatabaseReference, ValueEventListener> valueEventListenerHashMap = new HashMap<>();
+    private HashMap<DatabaseReference, ChildEventListener> childEventListenerHashMap = new HashMap<>();
 
 
     @Override
@@ -87,7 +91,7 @@ public class ChatActivity extends AppCompatActivity {
             friendPhone = getIntent().getExtras().getString("phone");
         }
 
-
+        chatRef = FirebaseDatabase.getInstance().getReference().child("chats");
         //custom Bar
         this.getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
@@ -101,9 +105,9 @@ public class ChatActivity extends AppCompatActivity {
 
 
         messagesListView = findViewById(R.id.messagesList);
-        mPhotoPickerButton = (ImageButton) findViewById(R.id.photoPickerButton);
-        mMessageEditText = (EditText) findViewById(R.id.messageEditText);
-        mSendButton = (Button) findViewById(R.id.sendButton);
+        mPhotoPickerButton =  findViewById(R.id.photoPickerButton);
+        mMessageEditText =  findViewById(R.id.messageEditText);
+        mSendButton =  findViewById(R.id.sendButton);
 
         List<Message> messages = new ArrayList<>();
         messageAdapter = new MessageAdapter(ChatActivity.this,R.layout.message_item_res,messages);
@@ -147,8 +151,6 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
-
-        ensureChatId();
     }
 
     private void setSeenIndecator(final Boolean seen)
@@ -302,25 +304,25 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
     private void getChatMessages(String id) {
-        FirebaseDatabase.getInstance().getReference().child("chats").child(id)
-                .addChildEventListener( new ChildEventListener() {
-                    @RequiresApi(api = Build.VERSION_CODES.M)
-                    @Override
-                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                        LayoutInflater inflater = getLayoutInflater();
-                        //View view = inflater.inflate(R.layout.message_item_res,null);
-                        Message message = dataSnapshot.getValue(Message.class);
-                        messageAdapter.add(message);
-                    }
-                    @Override
-                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
-                    @Override
-                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
-                    @Override
-                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {}
-                });
+        ChildEventListener chatListener = new ChildEventListener() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Message message = dataSnapshot.getValue(Message.class);
+                messageAdapter.add(message);
+            }
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        DatabaseReference ref = chatRef.child(id);
+        ref.addChildEventListener(chatListener);
+        childEventListenerHashMap.put(ref, chatListener);
     }
 
 
@@ -329,6 +331,7 @@ public class ChatActivity extends AppCompatActivity {
         super.onResume();
         setSeenIndecator(true);
         readMessage = true;
+        ensureChatId();
     }
 
     @Override
@@ -337,9 +340,18 @@ public class ChatActivity extends AppCompatActivity {
         messageAdapter.clear();
         setSeenIndecator(false);
         readMessage = false;
+        for (Map.Entry<DatabaseReference, ChildEventListener> entry : childEventListenerHashMap.entrySet()) {
+            DatabaseReference ref = entry.getKey();
+            ChildEventListener listener = entry.getValue();
+            ref.removeEventListener(listener);
+        }
+        for (Map.Entry<DatabaseReference, ValueEventListener> entry : valueEventListenerHashMap.entrySet()) {
+            DatabaseReference ref = entry.getKey();
+            ValueEventListener listener = entry.getValue();
+            ref.removeEventListener(listener);
+        }
     }
-    private void checkStatus()
-    {
+    private void checkStatus() {
         FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
