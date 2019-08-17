@@ -10,7 +10,6 @@ import android.os.Bundle;
 
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.MessagesListAdapter;
-import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
 import com.MM.notChatApp.user.setUserNameForFirstTime;
 import com.MM.notChatApp.user.userInfo;
@@ -47,32 +46,48 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+
+    // database References
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference chatListRef , usersRef ;
+
+    // auth
+    private FirebaseAuth mfirebaseAuth;
+    private FirebaseAuth.AuthStateListener mAuthStateListener;
+
     // firebase consts
     private static final int RC_SIGN_IN = 123;
-    private SwipeMenuListView MainListView;
+
     //adapter
-    MessagesListAdapter messagesListAdapter;
-    FirebaseAuth mfirebaseAuth;
-    private FirebaseAuth.AuthStateListener mAuthStateListener;
-    private FirebaseDatabase firebaseDatabase;
-    private DatabaseReference chatListRef;
-    private ChildEventListener childEventListener;
-    private ChildEventListener MessagegsEventListener;
+    private MessagesListAdapter messagesListAdapter;
+    private List<User> usersList = new ArrayList<>();
+
     private SwipeMenuCreator creator;
+    private SwipeMenuListView MainListView;
+
+    // maps
+    private HashMap<DatabaseReference, ValueEventListener> valueEventListenerHashMap = new HashMap<>();
+    private HashMap<DatabaseReference, ChildEventListener> childEventListenerHashMap = new HashMap<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // database ref set
         firebaseDatabase = FirebaseDatabase.getInstance();
+        chatListRef = firebaseDatabase.getReference().child("chatList");
+        usersRef = firebaseDatabase.getReference().child("users");
+
         String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
         FirebaseMessaging.getInstance().subscribeToTopic("user_"+phone.substring(1));
         MainListView = findViewById(R.id.listView);
         FloatingActionButton fab = findViewById(R.id.fab);
 
-        List<User> usersList = new ArrayList<>();
         messagesListAdapter = new MessagesListAdapter(this, R.layout.main_listview_item, usersList);
         MainListView.setAdapter(messagesListAdapter);
         MainListView.setEmptyView(findViewById(R.id.layoutEmpty));
@@ -173,92 +188,82 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void getChatList() {
-        //Listener to get users friends that he talked to
-        childEventListener = new ChildEventListener() {
+
+    private void getChatList(){
+        ChildEventListener chatsListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 final String friendPhone = dataSnapshot.getKey();
-                final String chatId = dataSnapshot.child("id").getValue(String.class);
-                //get last message sent
-                MessagegsEventListener = new ChildEventListener() {
-                    @Override
-                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                        Message message = dataSnapshot.getValue(Message.class);
-                        final String LastMessage = message.getText();
-                        
-                        //get user data
-                        FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
-                                new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        User friendUser = dataSnapshot.getValue(User.class);
-                                        friendUser.setUserBio(LastMessage);
-                                        int check = 0;
-                                        for (int i = 0; i < messagesListAdapter.getCount(); i++) {
-                                            User myuser = messagesListAdapter.getItem(i);
-                                            if (myuser.getPhone().equals(friendPhone)) {
-                                                check = -1;
-                                                break;
-                                            }
-                                        }
-                                        if (check != -1) {
-                                            messagesListAdapter.add(friendUser);
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                    }
-                                }
-                        );
-                    }
-                    @Override
-                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-                    }
-                    @Override
-                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-                    }
-                    @Override
-                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                };
-                FirebaseDatabase.getInstance().getReference().child("chats").
-                        child(chatId).orderByKey().limitToLast(1).addChildEventListener(MessagegsEventListener);
+                messagesListAdapter.add(new User(friendPhone));
+                makeFriendListeners(usersList.size()-1,friendPhone);
             }
-
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onCancelled(@NonNull DatabaseError databaseError) { }
         };
-        FirebaseDatabase.getInstance().getReference().child("chatList").child(FirebaseAuth
-                .getInstance().getCurrentUser().getPhoneNumber()).addChildEventListener(childEventListener);
+        DatabaseReference ref = chatListRef.child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
+        ref.addChildEventListener(chatsListener);
+        childEventListenerHashMap.put(ref, chatsListener);
     }
+
+    private void makeFriendListeners(final int postion , final String friendPhone){
+        makeFriendNameListener(postion, friendPhone);
+        makeLastMessageListener(postion, friendPhone);
+        makeFriendPhotoListener(postion, friendPhone);
+    }
+
+    private void makeLastMessageListener(final int postion , final String friendPhone){
+        ValueEventListener lastMessageListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final String lastMessage = dataSnapshot.child("text").getValue(String.class);
+                User user = messagesListAdapter.getItem(postion);
+                user.setUserBio(lastMessage);
+                usersList.set(postion, user);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        DatabaseReference ref = chatListRef.child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()).child(friendPhone).child("lastMessage");
+        ref.addValueEventListener(lastMessageListener);
+        valueEventListenerHashMap.put(ref , lastMessageListener);
+    }
+    private void makeFriendNameListener(final int postion , final String friendPhone){
+        ValueEventListener FriendNameListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final String name = dataSnapshot.getValue(String.class);
+                User user = messagesListAdapter.getItem(postion);
+                user.setUserName(name);
+                usersList.set(postion, user);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        DatabaseReference ref = usersRef.child(friendPhone).child("userName");
+        ref.addValueEventListener(FriendNameListener);
+        valueEventListenerHashMap.put(ref , FriendNameListener);
+    }
+    private void makeFriendPhotoListener(final int postion , final String friendPhone){
+        ValueEventListener FriendPhotoListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final String photoUrl = dataSnapshot.getValue(String.class);
+                User user = messagesListAdapter.getItem(postion);
+                user.setUserPhotoUrl(photoUrl);
+                usersList.set(postion, user);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        DatabaseReference ref = usersRef.child(friendPhone).child("userPhotoUrl");
+        ref.addValueEventListener(FriendPhotoListener);
+        valueEventListenerHashMap.put(ref , FriendPhotoListener);
+    }
+
+
+
 
 
     @Override
@@ -270,10 +275,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (mAuthStateListener != null) {
-            mfirebaseAuth.removeAuthStateListener(mAuthStateListener);
-        }
         messagesListAdapter.clear();
+        for (Map.Entry<DatabaseReference, ChildEventListener> entry : childEventListenerHashMap.entrySet()) {
+            DatabaseReference ref = entry.getKey();
+            ChildEventListener listener = entry.getValue();
+            ref.removeEventListener(listener);
+        }
+        for (Map.Entry<DatabaseReference, ValueEventListener> entry : valueEventListenerHashMap.entrySet()) {
+            DatabaseReference ref = entry.getKey();
+            ValueEventListener listener = entry.getValue();
+            ref.removeEventListener(listener);
+        }
     }
 
     @Override
@@ -369,8 +381,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void CheckConnection(String phone)
-    {
+    public void CheckConnection(String phone) {
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         final DatabaseReference myConnectionsRef = database.getReference("users/"+phone+"/connections");
 

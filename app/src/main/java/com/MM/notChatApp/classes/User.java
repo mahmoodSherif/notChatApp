@@ -23,6 +23,9 @@ public class User {
         UserBio = userBio;
         UserStatues = status;
     }
+    public User(String phone){
+        this.phone = phone;
+    }
 
     public String getUserStatues() {
         return UserStatues;
