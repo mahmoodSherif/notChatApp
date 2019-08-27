@@ -10,6 +10,7 @@ import android.os.Bundle;
 
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.MessagesListAdapter;
+import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
 import com.MM.notChatApp.user.setUserNameForFirstTime;
 import com.MM.notChatApp.user.userInfo;
@@ -72,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
     // maps
     private HashMap<DatabaseReference, ValueEventListener> valueEventListenerHashMap = new HashMap<>();
     private HashMap<DatabaseReference, ChildEventListener> childEventListenerHashMap = new HashMap<>();
+    private HashMap<String ,String > chatIdMap = new HashMap<>();
+    String userPhone;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +88,6 @@ public class MainActivity extends AppCompatActivity {
         chatListRef = firebaseDatabase.getReference().child("chatList");
         usersRef = firebaseDatabase.getReference().child("users");
 
-        String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
-        FirebaseMessaging.getInstance().subscribeToTopic("user_"+phone.substring(1));
         MainListView = findViewById(R.id.listView);
         FloatingActionButton fab = findViewById(R.id.fab);
 
@@ -106,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
         mfirebaseAuth = FirebaseAuth.getInstance();
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -123,8 +127,9 @@ public class MainActivity extends AppCompatActivity {
                     getChatList();
                 } else {
                     signIn();
-
                 }
+                String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+                FirebaseMessaging.getInstance().subscribeToTopic("user_"+phone.substring(1));
             }
         };
     }
@@ -179,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case 1:
                         // delete
-                        Toast.makeText(getApplicationContext(),"one",Toast.LENGTH_SHORT).show();
+                       deleteChat(position);
                         break;
                 }
                 // false : close the menu; true : not close the menu
@@ -194,8 +199,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 final String friendPhone = dataSnapshot.getKey();
-                messagesListAdapter.add(new User(friendPhone));
-                makeFriendListeners(usersList.size()-1,friendPhone);
+                if(dataSnapshot.child("have messages").getValue(boolean.class)) {
+                    final String chatId = dataSnapshot.child("id").getValue(String.class);
+                    messagesListAdapter.add(new User(friendPhone));
+                    chatIdMap.put(friendPhone, chatId);
+                    makeFriendListeners(usersList.size() - 1, friendPhone);
+                }
             }
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
@@ -361,7 +370,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void signOut() {
+    private void signOut()  {
         AuthUI.getInstance()
                 .signOut(this)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -373,7 +382,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public boolean isNetworkAvailable() {
+    private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
@@ -381,7 +390,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void CheckConnection(String phone) {
+    private void CheckConnection(String phone) {
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         final DatabaseReference myConnectionsRef = database.getReference("users/"+phone+"/connections");
 
@@ -410,6 +419,36 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError error) {
+            }
+        });
+    }
+
+    private void deleteChat(final int postion){
+        User curChatFriend = messagesListAdapter.getItem(postion);
+        final String curPhone = curChatFriend.getPhone();
+        final DatabaseReference ref = chatListRef.child(userPhone).child(curPhone);
+        ref.child("have messages").setValue(false);
+
+        final DatabaseReference refForChat = firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone));
+
+        firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone)).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Iterable<DataSnapshot> children = dataSnapshot.getChildren();
+                for(DataSnapshot x : children){
+                    if(x.child("have").getValue(String.class).equals("both")){
+                        x.getRef().child("have").setValue(curPhone);
+                    }else{
+                        x.getRef().removeValue();
+                    }
+                }
+                usersList.remove(postion);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
             }
         });
     }

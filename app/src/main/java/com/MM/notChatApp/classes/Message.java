@@ -6,6 +6,7 @@ public class Message {
     private String time;
     private String photoUrl;
     private String sentby;
+    private String have; // "both" for both users have the message "{user phone}"for the one who has the massage
     /*
     * 0 for unSend
     * 1 for send
@@ -14,15 +15,24 @@ public class Message {
     * */
     private int statues;
 
-    public Message(String text, String time, String photoUrl, int statues , String user) {
+    public Message(String text, String time, String photoUrl, int statues , String user , String have) {
         this.text = text;
         this.time = time;
         this.photoUrl = photoUrl;
         this.statues = statues;
         sentby = user;
+        this.have = have;
     }
     public Message() {
 
+    }
+
+    public String getHave() {
+        return have;
+    }
+
+    public void setHave(String have) {
+        this.have = have;
     }
 
     public String getSentby() {
