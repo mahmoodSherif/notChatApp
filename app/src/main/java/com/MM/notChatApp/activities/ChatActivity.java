@@ -442,6 +442,23 @@ public class ChatActivity extends AppCompatActivity {
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
+                Message message = new Message(mMessageEditText.getText().toString(),
+                        Time.format(new Date())  ,null , 2,userPhone , "both");
+                ChatActivity.this.notify(message ,friendPhone );
+                FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
+                        .push().setValue(message);
+
+                FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("lastMessage")
+                        .setValue(message);
+                FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone).child("lastMessage")
+                        .setValue(message);
+
+                FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("have messages")
+                        .setValue(true);
+                FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone).child("have messages")
+                        .setValue(true);
+
                 final String text = mMessageEditText.getText().toString();
                 final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                 FirebaseDatabase.getInstance().getReference().child("chatList")
@@ -490,7 +507,9 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message message = dataSnapshot.getValue(Message.class);
-                messageAdapter.add(message);
+                if(message.getHave().equals("both") || message.getHave().equals(userPhone)){
+                    messageAdapter.add(message);
+                }
             }
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
@@ -828,3 +847,4 @@ public class ChatActivity extends AppCompatActivity {
         return result && result1;
     }
 }
+

@@ -19,6 +19,8 @@ public class notChatApp extends Application implements Application.ActivityLifec
     private static void  status(String status) {
         HashMap<String,Object> hashMap = new HashMap<>();
         hashMap.put("UserStatues",status);
+        if(FirebaseAuth.getInstance().getCurrentUser() == null)
+            return;
         FirebaseDatabase.getInstance().getReference().child("users").child(
                 FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
         ).updateChildren(hashMap);
