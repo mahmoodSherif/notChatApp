@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
+    android:background="@drawable/chat_background"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -60,23 +61,31 @@
         android:orientation="horizontal">
 
         <ImageButton
+            android:background="@null"
+            android:layout_gravity="center"
             android:id="@+id/photoPickerButton"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@android:drawable/ic_menu_gallery" />
+            android:src="@drawable/attach_icon"/>
 
         <EditText
+            android:textColorHint="#4C525A"
+            android:hint="Type a message"
+            android:textColor="#ffffff"
             android:id="@+id/messageEditText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
+            android:layout_gravity="center"
             android:layout_weight="1" />
 
-        <Button
+        <ImageButton
+            android:clickable="false"
+            android:background="@null"
+            android:src="@drawable/bluesend"
             android:id="@+id/sendButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
+            android:layout_gravity="center"
             android:enabled="false"
             android:text="send"/>
 

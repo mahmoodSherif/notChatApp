@@ -38,7 +38,9 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -71,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SwipeMenuCreator creator;
     private SwipeMenuListView MainListView;
+    private SearchView searchView;
 
     // maps
     private HashMap<DatabaseReference, ValueEventListener> valueEventListenerHashMap = new HashMap<>();
@@ -228,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 final String lastMessage = dataSnapshot.child("text").getValue(String.class);
                 User user = messagesListAdapter.getItem(postion);
-                user.setUserBio(lastMessage);
+                user.setLastMessage(lastMessage);
                 usersList.set(postion, user);
                 messagesListAdapter.notifyDataSetChanged();
             }
@@ -296,12 +299,60 @@ public class MainActivity extends AppCompatActivity {
             ref.removeEventListener(listener);
         }
     }
+    @Override
+    public void onBackPressed() {
+        Log.d("MainActivity","onBackPressed");
+        if (!searchView.isIconified()) {
+            searchView.setIconified(true);
+        } else {
+            super.onBackPressed();
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuItem item = menu.findItem(R.id.searchMenu);
+        searchView = (SearchView) item.getActionView();
         return true;
+    }
+    private void searchFriends()
+    {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                return false;
+            }
+            @Override
+            public boolean onQueryTextChange(String s) {
+                if (s.length() >0) {
+                    final List<User> newList = new ArrayList<>();
+                    for (int i = 0; i < messagesListAdapter.getCount(); i++) {
+                        User user = messagesListAdapter.getItem(i);
+                        if (user.getUserName().toLowerCase().trim().startsWith(s.toLowerCase().trim())) {
+                            newList.add(user);
+                        }
+                    }
+                    if(newList.size()==0)
+                    {
+
+                    }
+                    MessagesListAdapter newAdapter =
+                            new MessagesListAdapter(MainActivity.this,
+                                    R.layout.main_listview_item,
+                                    newList
+                            );
+                    MainListView.setAdapter(newAdapter);
+                    newAdapter.notifyDataSetChanged();
+                }
+                else {
+                    MainListView.setAdapter(messagesListAdapter);
+                }
+                return true;
+            }
+
+        });
     }
 
     @Override
@@ -324,7 +375,10 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             return true;
         }
-
+        if(id == R.id.searchMenu)
+        {
+            searchFriends();
+        }
         return super.onOptionsItemSelected(item);
     }
 

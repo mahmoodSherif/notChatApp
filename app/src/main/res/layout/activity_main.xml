@@ -48,7 +48,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="10dp"
-                    android:text="Start chatting.."
+                    android:text="No Results"
                     android:textSize="20sp" />
 
             </LinearLayout>

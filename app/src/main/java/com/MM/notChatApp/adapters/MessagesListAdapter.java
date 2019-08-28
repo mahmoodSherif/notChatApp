@@ -2,6 +2,7 @@ package com.MM.notChatApp.adapters;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -22,11 +23,9 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MessagesListAdapter extends ArrayAdapter<User> {
     private List<User>userList;
-    private ArrayList<User> arraylist;
     public MessagesListAdapter(Context context, int resource, List<User> objects) {
         super(context, resource, objects);
-        userList = new ArrayList<>();
-        arraylist = new ArrayList<>();
+        userList = objects;
     }
 
     @Override
@@ -40,7 +39,6 @@ public class MessagesListAdapter extends ArrayAdapter<User> {
         TextView friendLastMessage = convertView.findViewById(R.id.MainFriendMessage);
        // TextView LastMessageTime = convertView.findViewById(R.id.MainMessageTime);
         User user = getItem(position);
-        arraylist.add(user);
         Glide.with(friendImage.getContext())
                 .load(user.getUserPhotoUrl())
                 .into(friendImage);
@@ -49,21 +47,4 @@ public class MessagesListAdapter extends ArrayAdapter<User> {
 
         return convertView;
     }
-    //filter
-   /* public void filter(String charText){
-        charText = charText.toLowerCase(Locale.getDefault());
-        userList.clear();
-        if (charText.length()==0){
-            userList.addAll(arraylist);
-        }
-        else {
-            for (User user : arraylist){
-                if (user.getUserName().toLowerCase(Locale.getDefault())
-                        .contains(charText)){
-                    userList.add(user);
-                }
-            }
-        }
-        notifyDataSetChanged();
-    }*/
 }

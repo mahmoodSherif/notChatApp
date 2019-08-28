@@ -14,8 +14,8 @@
         android:id="@+id/searchMenu"
         android:icon="@drawable/search_icon"
         android:title="search"
-        app:showAsAction="always|collapseActionView"
-        app:actionViewClass="android.widget.SearchView"/>
+        app:showAsAction="ifRoom|collapseActionView"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"/>
     <item
         android:id="@+id/signOut"
         android:title="sign out"
