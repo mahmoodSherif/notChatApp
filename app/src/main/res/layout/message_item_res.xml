@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:padding="8dp">
 
@@ -11,6 +12,27 @@
         android:background="@drawable/messages_left"
         android:orientation="vertical"
         android:padding="8dp">
+        <androidx.cardview.widget.CardView
+            android:id="@+id/resCardView"
+            app:cardUseCompatPadding="true"
+            android:visibility="gone"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/resDoctxt"
+                android:layout_gravity="center"
+                android:text="doc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </androidx.cardview.widget.CardView>
+        <ImageView
+            android:visibility="gone"
+            android:layout_width="250dp"
+            android:adjustViewBounds="true"
+            android:id="@+id/imageRes"
+            android:layout_height="250dp"
+            />
 
         <TextView
             android:id="@+id/MessageRes"
@@ -18,7 +40,7 @@
             android:layout_height="wrap_content"
             android:maxWidth="300dp"
             android:text="Message"
-            android:textColor="#000"
+            android:textColor=" #ffffff"
             android:textSize="18dp" />
 
         <TextView

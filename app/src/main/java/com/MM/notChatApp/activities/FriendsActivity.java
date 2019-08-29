@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.friendsAdapter;
@@ -29,6 +30,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class FriendsActivity extends AppCompatActivity {
 
@@ -40,6 +44,7 @@ public class FriendsActivity extends AppCompatActivity {
     ArrayList<String>numbers ;
     FirebaseDatabase firebaseDatabase;
     DatabaseReference databaseReference;
+    Set<String> friendsSet ;
     // Request code for READ_CONTACTS
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
     ProgressBar progressBar;
@@ -47,7 +52,7 @@ public class FriendsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends);
-
+        friendsSet = new HashSet<>();
         // ask for
         if (ContextCompat.checkSelfPermission(FriendsActivity.this,
                 Manifest.permission.READ_CONTACTS)
@@ -103,7 +108,8 @@ public class FriendsActivity extends AppCompatActivity {
         for(int i=0;i<numbers.size();i++) {
             if(checkIfNumVal(numbers.get(i))){
                 Log.v("NEWEE" , "new one ");
-                read(numbers.get(i));
+                String num = numbers.get(i).replaceAll(" ","");
+                read(num);
             }
             counter++;
         }
@@ -121,8 +127,9 @@ public class FriendsActivity extends AppCompatActivity {
         return true;
     }
 
-    private void read(String number)
+    private void read(final String number)
     {
+
         databaseReference = firebaseDatabase.getReference().child("users").child(number);
 
             databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -130,9 +137,19 @@ public class FriendsActivity extends AppCompatActivity {
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                     User user = dataSnapshot.getValue(User.class);
+                    Boolean ok = false;
                     if(user!=null)
                     {
-                        adapter.add(user);
+                        for(int i = 0 ;i<adapter.getCount();i++)
+                        {
+                            if(adapter.getItem(i).getPhone().equals(number))
+                            {
+                                ok = true;
+                            }
+                        }
+                        if(!ok) {
+                            adapter.add(user);
+                        }
                     }
 
                         //Toast.makeText(getApplicationContext(),number,Toast.LENGTH_SHORT).show();
@@ -153,6 +170,7 @@ public class FriendsActivity extends AppCompatActivity {
         {
             progressBar.setVisibility(ProgressBar.INVISIBLE);
         }
+
 
     }
 

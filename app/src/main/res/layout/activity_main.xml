@@ -40,14 +40,15 @@
                     android:id="@+id/imageView2"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
-                    app:srcCompat="@color/colorAccent" />
+                    app:srcCompat="@drawable/group" />
 
                 <TextView
+                    android:gravity="center"
                     android:id="@+id/textView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="10dp"
-                    android:text="you have no chats RN"
+                    android:text="No Results"
                     android:textSize="20sp" />
 
             </LinearLayout>

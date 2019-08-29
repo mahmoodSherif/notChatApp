@@ -2,23 +2,30 @@ package com.MM.notChatApp.adapters;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.classes.User;
 import com.bumptech.glide.Glide;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MessagesListAdapter extends ArrayAdapter<User> {
+    private List<User>userList;
     public MessagesListAdapter(Context context, int resource, List<User> objects) {
         super(context, resource, objects);
+        userList = objects;
     }
 
     @Override
@@ -36,7 +43,7 @@ public class MessagesListAdapter extends ArrayAdapter<User> {
                 .load(user.getUserPhotoUrl())
                 .into(friendImage);
         friendName.setText(user.getUserName());
-        friendLastMessage.setText(user.getUserBio());
+        friendLastMessage.setText(user.getLastMessage());
 
         return convertView;
     }

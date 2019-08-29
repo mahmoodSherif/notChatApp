@@ -40,6 +40,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     //circular imageView
     implementation 'de.hdodenhof:circleimageview:3.0.0'
+    //crop
+    implementation 'com.theartofdev.edmodo:android-image-cropper:2.8.+'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
 
 }
