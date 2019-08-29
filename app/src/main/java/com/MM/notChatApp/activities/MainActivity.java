@@ -129,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
                     signIn();
                 }
                 String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+                userPhone = phone;
                 FirebaseMessaging.getInstance().subscribeToTopic("user_"+phone.substring(1));
             }
         };
@@ -424,7 +425,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void deleteChat(final int postion){
-        User curChatFriend = messagesListAdapter.getItem(postion);
+        final User curChatFriend = messagesListAdapter.getItem(postion);
         final String curPhone = curChatFriend.getPhone();
         final DatabaseReference ref = chatListRef.child(userPhone).child(curPhone);
         ref.child("have messages").setValue(false);
