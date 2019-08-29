@@ -194,6 +194,7 @@ public class ChatActivity extends AppCompatActivity {
                 if(mActionMode != null)
                 {
                     // // add or remove selection for current list item
+                    view.setBackgroundColor(Color.parseColor("#ff4d4d"));
                     onListItemSelect(i);
                 }
             }
@@ -204,6 +205,7 @@ public class ChatActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 view.setActivated(true);
                messagesListView.setItemChecked(i,true);
+                view.setBackgroundColor(Color.parseColor("#ff4d4d"));
                 onListItemSelect(i);
                 return true;
             }
@@ -437,12 +439,12 @@ public class ChatActivity extends AppCompatActivity {
 
 
     private void setOnClickListenerForSendButton(final String CurChatId){
-        if (mMessageEditText.getText().toString().trim().equals(""))
-            return;
+
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
+                final String text = mMessageEditText.getText().toString();
                 Message message = new Message(mMessageEditText.getText().toString(),
                         Time.format(new Date())  ,null , 2,userPhone , "both");
                 ChatActivity.this.notify(message ,friendPhone );
@@ -459,9 +461,7 @@ public class ChatActivity extends AppCompatActivity {
                 FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone).child("have messages")
                         .setValue(true);
 
-                final String text = mMessageEditText.getText().toString();
-                final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
-                FirebaseDatabase.getInstance().getReference().child("chatList")
+                /*FirebaseDatabase.getInstance().getReference().child("chatList")
                         .child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber())
                         .child(friendPhone).child("seen").addListenerForSingleValueEvent(
                         new ValueEventListener() {
@@ -473,7 +473,7 @@ public class ChatActivity extends AppCompatActivity {
                                     {
 
                                         Message message = new Message(text,
-                                                Time.format(new Date())  ,null , 3,userPhone);
+                                                Time.format(new Date())  ,null , 3,userPhone,null);
 
                                         ChatActivity.this.notify(message ,friendPhone );
                                         FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
@@ -496,7 +496,7 @@ public class ChatActivity extends AppCompatActivity {
 
                             }
                         }
-                );
+                );*/
                 mMessageEditText.setText("");
             }
         });
@@ -609,7 +609,7 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.inchat_menu, menu);
         return true;
     }
 
@@ -714,34 +714,28 @@ public class ChatActivity extends AppCompatActivity {
     }
     private void send(Uri selectedDocUri)
     {
-        progressDialog = new ProgressDialog(this);
+        /*progressDialog = new ProgressDialog(this);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         progressDialog.setTitle("loading...");
-        progressDialog.setProgress(0);
+        progressDialog.setProgress(0);*/
         final ProgressBar progressBar = new ProgressBar(ChatActivity.this,
                 null, android.R.attr.progressBarStyleSmall);
         progressBar.setVisibility(View.VISIBLE);
 
-        final StorageReference photoRef = docRef.child(userPhone).child(friendPhone)
-                .child(selectedDocUri.getLastPathSegment());
+        final StorageReference DocRef = docRef.child(userPhone).child(friendPhone)
+                .child(selectedDocUri.toString());
         docRef.child(friendPhone).child(userPhone)
-                .child(selectedDocUri.getLastPathSegment()).putFile(selectedDocUri);
-        UploadTask task = photoRef.putFile(selectedDocUri);
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(ChatActivity.this,"Failed",Toast.LENGTH_SHORT).show();
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                .child(selectedDocUri.toString()).putFile(selectedDocUri);
+        UploadTask task = DocRef.putFile(selectedDocUri);
+        task.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Toast.makeText(ChatActivity.this,"done",Toast.LENGTH_SHORT).show();
             }
-        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+        }).addOnFailureListener(new OnFailureListener() {
             @Override
-            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                int currentp = (int) (100*taskSnapshot.getBytesTransferred()/taskSnapshot.getTotalByteCount());
-                progressDialog.setProgress(currentp);
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(ChatActivity.this,"Failed",Toast.LENGTH_SHORT).show();
             }
         });
         Task<Uri> uriTask =task.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
@@ -751,7 +745,7 @@ public class ChatActivity extends AppCompatActivity {
                 {
                     throw task.getException();
                 }
-                return photoRef.getDownloadUrl();
+                return DocRef.getDownloadUrl();
             }
         }).addOnCompleteListener(new OnCompleteListener<Uri>() {
             @Override
@@ -762,7 +756,7 @@ public class ChatActivity extends AppCompatActivity {
 
                     final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                     final Message  message = new Message(downloadedUri.toString()
-                            , Time.format(new Date()) , "IsDOC", 0, userPhone);
+                            , Time.format(new Date()) , "IsDOC", 0, userPhone,"both");
                     FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("id")
                             .addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override

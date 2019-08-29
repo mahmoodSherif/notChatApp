@@ -39,8 +39,12 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         Message message = getItem(position);
-        Boolean isPhoto = message.getPhotoUrl()!=null && !message.getPhotoUrl().equals("IsDOC");
-        boolean isDoc = message.getPhotoUrl().equals("IsDOC");
+        boolean isPhoto = message.getPhotoUrl()!=null && !message.getPhotoUrl().equals("IsDOC");
+        boolean isDoc = false;
+        if(message.getPhotoUrl()!=null && message.getPhotoUrl().equals("IsDOC") )
+        {
+             isDoc = true;   
+        }
         if(!message.getSentby().equals(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber())){
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.message_item_res, parent, false);
             TextView messageTextView = convertView.findViewById(R.id.MessageRes);
@@ -67,16 +71,16 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                         .centerCrop()
                         .into(photoMessage);
             }
-            else if(isDoc)
+           /* else if(isDoc)
             {
                  cardView = convertView.findViewById(R.id.resCardView);
                 TextView docTxt = convertView.findViewById(R.id.resDoctxt);
                 docTxt.setText(message.getText());
-                cardView.setVisibility(View.VISIBLE);
-            }
+             //   cardView.setVisibility(View.VISIBLE);
+            }*/
             else {
                 photoMessage.setVisibility(View.GONE);
-                cardView.setVisibility(View.GONE);
+              //  cardView.setVisibility(View.GONE);
             }
 
             return convertView;
@@ -88,6 +92,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             ImageView photoMessage = convertView.findViewById(R.id.image);
             messageTextView.setText(message.getText());
             timeTextView.setText(message.getTime());
+            CardView cardView = null;
             if(message.getStatues() == 3)
             {
                 status.setImageResource(R.drawable.read16);
@@ -110,6 +115,13 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                         .centerCrop()
                         .into(photoMessage);
             }
+           /* else if(isDoc)
+            {
+                cardView = convertView.findViewById(R.id.resCardView);
+                TextView docTxt = convertView.findViewById(R.id.resDoctxt);
+                docTxt.setText(message.getText());
+                //   cardView.setVisibility(View.VISIBLE);
+            }*/
             else {
                 photoMessage.setVisibility(View.GONE);
             }
