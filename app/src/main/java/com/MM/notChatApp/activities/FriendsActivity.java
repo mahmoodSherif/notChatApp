@@ -30,6 +30,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -44,15 +45,15 @@ public class FriendsActivity extends AppCompatActivity {
     ArrayList<String>numbers ;
     FirebaseDatabase firebaseDatabase;
     DatabaseReference databaseReference;
-    Set<String> friendsSet ;
     // Request code for READ_CONTACTS
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
     ProgressBar progressBar;
+    Map<String, Boolean>map;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends);
-        friendsSet = new HashSet<>();
+        map = new HashMap<String, Boolean>();
         // ask for
         if (ContextCompat.checkSelfPermission(FriendsActivity.this,
                 Manifest.permission.READ_CONTACTS)
@@ -105,14 +106,18 @@ public class FriendsActivity extends AppCompatActivity {
             getFromContacts();
        // }
         //Toast.makeText(getApplicationContext(),String.valueOf(numbers.size()),Toast.LENGTH_SHORT).show();
-        for(int i=0;i<numbers.size();i++) {
-            if(checkIfNumVal(numbers.get(i))){
+        for(String number : map.keySet()) {
+            if(checkIfNumVal(number)){
                 Log.v("NEWEE" , "new one ");
-                String num = numbers.get(i).replaceAll(" ","");
-                read(num);
+             //   String num = numbers.get(i).replaceAll(" ","");
+               // read(num);
+            }
+            else {
+                map.put(number,false);
             }
             counter++;
         }
+        read();
 
     }
 
@@ -127,17 +132,48 @@ public class FriendsActivity extends AppCompatActivity {
         return true;
     }
 
-    private void read(final String number)
+    private void read()
     {
+        firebaseDatabase.getReference().child("users")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        long count = dataSnapshot.getChildrenCount();
+                        int counter = 0;
+                       for(DataSnapshot snapshot : dataSnapshot.getChildren())
+                       {
+                           User user = snapshot.getValue(User.class);
+                           if(map.get(user.getPhone())!=null) {
+                               if (map.get(user.getPhone())) {
+                                   adapter.add(user);
+                                   progressBar.setVisibility(View.VISIBLE);
+                               }
+                           }
+                           else {
+                               Log.v("see",user.getPhone()+" "+String.valueOf(map.get(user.getPhone())));
+                            //   Toast.makeText(getApplicationContext(),user.getPhone()+" "+String.valueOf(map.get(user.getPhone())),Toast.LENGTH_LONG).show();
+                           }
+                           counter++;
+                           if(counter == count)
+                           {
+                               progressBar.setVisibility(View.GONE);
+                           }
+                       }
+                    }
 
-        databaseReference = firebaseDatabase.getReference().child("users").child(number);
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+        /*databaseReference = firebaseDatabase.getReference().child("users").child(number);
 
             databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                     User user = dataSnapshot.getValue(User.class);
-                    Boolean ok = false;
+                    boolean ok = false;
                     if(user!=null)
                     {
                         for(int i = 0 ;i<adapter.getCount();i++)
@@ -171,7 +207,7 @@ public class FriendsActivity extends AppCompatActivity {
             progressBar.setVisibility(ProgressBar.INVISIBLE);
         }
 
-
+*/
     }
 
     public void getFromContacts() {
@@ -188,7 +224,24 @@ public class FriendsActivity extends AppCompatActivity {
         do {
             String name = names.getString(indexName);
             String number = names.getString(indexNumber);
-            numbers.add(number);
+            //numbers.add(number);
+            String num = number.replaceAll(" ","");
+            StringBuilder newString = new StringBuilder();
+            if(num.charAt(0)!='+'&&num.charAt(1)!='2') {
+              /* for (int i = 0; i < num.length(); i++) {
+                    newString.append(num.charAt(i));
+                    if (i == 0) {
+                        newString.append("+2");
+                    }
+                }*/
+              newString.append("+2");
+              newString.append(num);
+               // Toast.makeText(getApplicationContext(),newString,Toast.LENGTH_LONG).show();
+              map.put(newString.toString(),true);
+            }
+            else {
+                map.put(num, true);
+            }
         } while (names.moveToNext());
     }
     @Override
