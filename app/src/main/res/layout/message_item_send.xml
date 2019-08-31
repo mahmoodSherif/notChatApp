@@ -8,33 +8,19 @@
     android:padding="8dp">
 
     <LinearLayout
+        android:id="@+id/xx"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/message_right"
         android:orientation="vertical"
         android:padding="8dp">
-        <androidx.cardview.widget.CardView
-            android:id="@+id/sendCardView"
-            app:cardUseCompatPadding="true"
-            android:visibility="gone"
+
+        <ImageView
+            android:id="@+id/image"
             android:layout_width="250dp"
-            android:layout_height="wrap_content">
-            <TextView
-                android:id="@+id/sendDoctxt"
-                android:layout_gravity="center"
-                android:text="doc"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-        </androidx.cardview.widget.CardView>
-       <ImageView
-           android:visibility="gone"
-           android:layout_width="250dp"
-           android:adjustViewBounds="true"
-           android:id="@+id/image"
-           android:layout_height="250dp"
-           />
-
+            android:layout_height="250dp"
+            android:adjustViewBounds="true"
+            android:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/layout"
@@ -49,6 +35,7 @@
                 android:layout_gravity="right"
                 android:padding="5dp"
                 android:src="@drawable/sent16" />
+
             <TextView
                 android:id="@+id/MessageSend"
                 android:layout_width="wrap_content"
@@ -59,11 +46,28 @@
                 android:textSize="18sp" />
         </LinearLayout>
 
+
         <TextView
             android:id="@+id/MessageTimeSend"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="3:00 pm"
             android:textSize="10sp" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/sendCardView"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:cardUseCompatPadding="true">
+
+            <TextView
+                android:id="@+id/sendDoctxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="doc" />
+
+        </androidx.cardview.widget.CardView>
     </LinearLayout>
 </LinearLayout>

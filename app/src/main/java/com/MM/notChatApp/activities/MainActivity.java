@@ -135,9 +135,8 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     signIn();
                 }
-                String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
-                userPhone = phone;
-                FirebaseMessaging.getInstance().subscribeToTopic("user_"+phone.substring(1));
+                userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+                FirebaseMessaging.getInstance().subscribeToTopic("user_"+userPhone.substring(1));
             }
         };
     }

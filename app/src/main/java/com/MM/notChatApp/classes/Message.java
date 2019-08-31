@@ -2,11 +2,21 @@ package com.MM.notChatApp.classes;
 
 
 public class Message {
+    private String id;
     private String text;
     private String time;
     private String photoUrl;
     private String sentby;
     private String have; // "both" for both users have the message "{user phone}"for the one who has the massage
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     /*
     * 0 for unSend
     * 1 for send
