@@ -9,6 +9,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -18,6 +20,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,6 +34,7 @@ import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -46,6 +51,7 @@ import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.MessageAdapter;
 import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
+import com.MM.notChatApp.dialogs.AudioRecord;
 import com.MM.notChatApp.dialogs.FloatingView;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Continuation;
@@ -85,6 +91,8 @@ public class ChatActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_GALLERY =999;
     private static final int CAMERA_REQUEST_CODE = 200;
     private static final int IMAGE_PICK_CAMERA_CODE = 1001;
+    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
+    private String [] permissions ;
     //camera permission
     String CameraPermission[];
     // activity views
@@ -129,8 +137,12 @@ public class ChatActivity extends AppCompatActivity {
     //action mode Represents a contextual mode of the user interface
     private ActionMode mActionMode;
 
+    private  String fileName = null;
+    // Requesting permission to RECORD_AUDIO
+    private boolean permissionToRecordAccepted = false;
 
-    @Override
+     AudioRecord audioRecord;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
@@ -148,6 +160,7 @@ public class ChatActivity extends AppCompatActivity {
         //camera permission
         CameraPermission = new String[]{Manifest.permission.CAMERA,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        permissions = new String[]{Manifest.permission.RECORD_AUDIO,Manifest.permission.WRITE_EXTERNAL_STORAGE};
         //custom Bar
         this.getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
@@ -259,6 +272,54 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
+
+
+        fileName = getExternalCacheDir().getAbsolutePath();
+        fileName += "/audiorecord.3gp";
+         audioRecord = new AudioRecord(fileName);
+        //ActivityCompat.requestPermissions(ChatActivity.this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
+        final boolean result = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == (PackageManager.PERMISSION_GRANTED);
+        final boolean result1 = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == (PackageManager.PERMISSION_GRANTED);
+        mSendButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                if (result&&result1) {
+                    if (audioRecord.record()) {
+                        Toast.makeText(getApplicationContext(), "recording..", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "done", Toast.LENGTH_LONG).show();
+                        //saveRecordToFB();
+                        audioRecord.playRecord();
+                    }
+                }
+                else {
+                    ActivityCompat.requestPermissions(ChatActivity.this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
+                }
+                return false;
+            }
+        });
+
+    }
+
+    private void saveRecordToFB() {
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(audioRecord.getRecorder()!=null)
+        {
+            audioRecord.getRecorder().release();
+            audioRecord.setRecorder(null);
+        }
+        if(audioRecord.getPlayer()!=null)
+        {
+            audioRecord.getPlayer().release();
+            audioRecord.setPlayer(null);
+        }
     }
 
     private void openDialog() {
@@ -439,7 +500,8 @@ public class ChatActivity extends AppCompatActivity {
 
 
     private void setOnClickListenerForSendButton(final String CurChatId){
-
+        if(mMessageEditText.getText().toString().trim().equals(""))
+            return;
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -655,6 +717,17 @@ public class ChatActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
             }
         }
+        if(requestCode== REQUEST_RECORD_AUDIO_PERMISSION) {
+            if(grantResults.length>0)
+            {
+                permissionToRecordAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                if(!permissionToRecordAccepted)
+                {
+
+                    Toast.makeText(this,"Permission denied",Toast.LENGTH_LONG).show();
+                }
+            }
+        }
         if(requestCode == CAMERA_REQUEST_CODE)
         {
             if(grantResults.length > 0)
@@ -791,7 +864,6 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
     }
-
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void documentClick(View view) {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
