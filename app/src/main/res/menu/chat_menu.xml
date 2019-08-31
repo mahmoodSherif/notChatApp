@@ -8,4 +8,9 @@
         android:title="Copy"
         app:showAsAction="ifRoom|withText"
         />
+    <item
+        android:id="@+id/messageDelete"
+        android:icon="@drawable/delete_icon"
+        android:title="delete"
+        app:showAsAction="always" />
 </menu>

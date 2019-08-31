@@ -30,6 +30,7 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -85,16 +86,19 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatActivity extends AppCompatActivity {
 
-    public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
-    private static final int RC_PHOTO_PICKER =  2;
+    // const
+    private static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
+    private static final int RC_PHOTO_PICKER = 2;
     private static final int READ_REQUEST_CODE = 42;
-    private static final int REQUEST_CODE_GALLERY =999;
+    private static final int REQUEST_CODE_GALLERY = 999;
     private static final int CAMERA_REQUEST_CODE = 200;
     private static final int IMAGE_PICK_CAMERA_CODE = 1001;
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
     private String [] permissions ;
+
     //camera permission
     String CameraPermission[];
+
     // activity views
     private MessageAdapter messageAdapter;
     private ListView messagesListView;
@@ -103,7 +107,8 @@ public class ChatActivity extends AppCompatActivity {
     private ImageButton mSendButton;
     private ChildEventListener messagesListener;
     boolean typing = false;
-    private String text = "" ;
+    private String text = "";
+
     // bar views
     private TextView BarfriendName;
     private CircleImageView BarFriendImage;
@@ -117,9 +122,11 @@ public class ChatActivity extends AppCompatActivity {
 
     // firebase
     private FirebaseDatabase mFirebaseDatabase;
+    private DatabaseReference curChatRef;
     private DatabaseReference chatRef;
     private FirebaseStorage firebaseStorage;
     private StorageReference docRef;
+
     // cur chat info
     String userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
     String friendPhone = null;
@@ -140,6 +147,9 @@ public class ChatActivity extends AppCompatActivity {
     private  String fileName = null;
     // Requesting permission to RECORD_AUDIO
     private boolean permissionToRecordAccepted = false;
+    // listView list
+    List<Message> messages = new ArrayList<>();
+
 
      AudioRecord audioRecord;
 
@@ -148,7 +158,7 @@ public class ChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_chat);
         readMessage = true;
         // intent
-        if(getIntent().getExtras()!=null) {
+        if (getIntent().getExtras() != null) {
             friendname = getIntent().getExtras().getString("username");
             photo = Uri.parse(getIntent().getExtras().getString("userPhoto"));
             friendPhone = getIntent().getExtras().getString("phone");
@@ -175,23 +185,19 @@ public class ChatActivity extends AppCompatActivity {
 
         //popup menu views
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-         View menuView = getLayoutInflater().inflate(R.layout.attachments_view, null, false);
+        View menuView = getLayoutInflater().inflate(R.layout.attachments_view, null, false);
         galaryImage = menuView.findViewById(R.id.galaryImage);
         cameraImage = menuView.findViewById(R.id.cameraImage);
         docImage = menuView.findViewById(R.id.docImage);
         TextView textView = menuView.findViewById(R.id.tvGallery);
 
 
-
-
-
         messagesListView = findViewById(R.id.messagesList);
-        mPhotoPickerButton =  findViewById(R.id.photoPickerButton);
-        mMessageEditText =  findViewById(R.id.messageEditText);
-        mSendButton =  findViewById(R.id.sendButton);
+        mPhotoPickerButton = findViewById(R.id.photoPickerButton);
+        mMessageEditText = findViewById(R.id.messageEditText);
+        mSendButton = findViewById(R.id.sendButton);
 
-        final List<Message> messages = new ArrayList<>();
-        messageAdapter = new MessageAdapter(ChatActivity.this,R.layout.message_item_res,messages);
+        messageAdapter = new MessageAdapter(ChatActivity.this, R.layout.message_item_res, messages);
         messagesListView.setAdapter(messageAdapter);
 
         mPhotoPickerButton.setOnClickListener(new View.OnClickListener() {
@@ -204,8 +210,7 @@ public class ChatActivity extends AppCompatActivity {
         messagesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if(mActionMode != null)
-                {
+                if (mActionMode != null) {
                     // // add or remove selection for current list item
                     view.setBackgroundColor(Color.parseColor("#ff4d4d"));
                     onListItemSelect(i);
@@ -217,9 +222,9 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 view.setActivated(true);
-               messagesListView.setItemChecked(i,true);
-                view.setBackgroundColor(Color.parseColor("#ff4d4d"));
+                messagesListView.setItemChecked(i, true);
                 onListItemSelect(i);
+                view.setBackgroundColor(Color.parseColor("#ff0000"));
                 return true;
             }
         });
@@ -235,7 +240,7 @@ public class ChatActivity extends AppCompatActivity {
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(ChatActivity.this,MainActivity.class);
+                Intent intent = new Intent(ChatActivity.this, MainActivity.class);
                 startActivity(intent);
             }
         });
@@ -261,10 +266,10 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                if (!TextUtils.isEmpty(editable.toString())&&editable.toString().trim().length()==1) {
+                if (!TextUtils.isEmpty(editable.toString()) && editable.toString().trim().length() == 1) {
                     typing = true;
                     setTypingIndecator(true);
-                } else if(editable.toString().trim().length()==0 && typing){
+                } else if (editable.toString().trim().length() == 0 && typing) {
                     typing = false;
                     setTypingIndecator(false);
                 }
@@ -332,12 +337,10 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-    private void onListItemSelect(int position)
-    {
+    private void onListItemSelect(int position) {
         messageAdapter.toggleSelection(position);
-        boolean hasCheckedItems = messageAdapter.getSelectedCount()>0;
-        if(hasCheckedItems && mActionMode == null)
-        {
+        boolean hasCheckedItems = messageAdapter.getSelectedCount() > 0;
+        if (hasCheckedItems && mActionMode == null) {
             final Message message = messageAdapter.getItem(position);
             // there are some selected items, start the actionMode
             mActionMode = startActionMode(new ActionMode.Callback() {
@@ -355,21 +358,27 @@ public class ChatActivity extends AppCompatActivity {
 
                 @Override
                 public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-                    switch (menuItem.getItemId())
-                    {
+                    switch (menuItem.getItemId()) {
                         case R.id.copyMenu:
-                            for (int i = 0; i<messageAdapter.getSelectedIds().size();i++)
-                            {
-                             Message message1 = messageAdapter.getItem(messageAdapter.getSelectedIds()
-                             .keyAt(i));
-                             text+=message1.getText()+" ";
+                            for (int i = 0; i < messageAdapter.getSelectedIds().size(); i++) {
+                                Message message1 = messageAdapter.getItem(messageAdapter.getSelectedIds()
+                                        .keyAt(i));
+                                text += message1.getText() + " ";
                             }
                             ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                             ClipData clip = ClipData.newPlainText("message text", text);
                             clipboard.setPrimaryClip(clip);
-                            Toast.makeText(getApplicationContext(),"Copied",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Copied", Toast.LENGTH_SHORT).show();
                             actionMode.finish();
                             text = "";
+                            return true;
+                        case R.id.messageDelete:
+                            for (int i = 0; i < messageAdapter.getSelectedIds().size(); i++) {
+                                Message message1 = messageAdapter.getItem(messageAdapter.getSelectedIds()
+                                        .keyAt(i));
+                                deleteMessage(message1);
+                            }
+                            actionMode.finish();
                             return true;
                         default:
                             return false;
@@ -383,13 +392,11 @@ public class ChatActivity extends AppCompatActivity {
                     mActionMode = null;
                 }
             });
-        }
-        else if(!hasCheckedItems&&mActionMode!=null){
+        } else if (!hasCheckedItems && mActionMode != null) {
             // there no selected items, finish the actionMode
             mActionMode.finish();
         }
-        if (mActionMode!=null)
-        {
+        if (mActionMode != null) {
             mActionMode.setTitle(String.valueOf(messageAdapter.getSelectedCount()));
         }
     }
@@ -398,53 +405,47 @@ public class ChatActivity extends AppCompatActivity {
     private void setTypingIndecator(final Boolean typing) {
         FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone)
                 .child(FirebaseAuth.getInstance()
-                                .getCurrentUser().getPhoneNumber())
+                        .getCurrentUser().getPhoneNumber())
                 .addListenerForSingleValueEvent(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.getValue() == null)
-                        {
-                            FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
-                                    FirebaseAuth.getInstance()
-                                            .getCurrentUser().getPhoneNumber()).child("typing").setValue(typing);
-                        }
-                        else
-                        {
-                            HashMap<String,Object> hashMap = new HashMap<>();
-                            hashMap.put("typing",typing);
-                            FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
-                                    FirebaseAuth.getInstance()
-                                            .getCurrentUser().getPhoneNumber()).updateChildren(hashMap);
-                        }
-                    }
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                if (dataSnapshot.getValue() == null) {
+                                    FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
+                                            FirebaseAuth.getInstance()
+                                                    .getCurrentUser().getPhoneNumber()).child("typing").setValue(typing);
+                                } else {
+                                    HashMap<String, Object> hashMap = new HashMap<>();
+                                    hashMap.put("typing", typing);
+                                    FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
+                                            FirebaseAuth.getInstance()
+                                                    .getCurrentUser().getPhoneNumber()).updateChildren(hashMap);
+                                }
+                            }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                    }
-                }
-        );
+                            }
+                        }
+                );
 
     }
-    private void setSeenIndecator(final Boolean seen)
-    {
+
+    private void setSeenIndecator(final Boolean seen) {
         FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone)
                 .child(FirebaseAuth.getInstance()
                         .getCurrentUser().getPhoneNumber()).addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.getValue() == null)
-                        {
+                        if (dataSnapshot.getValue() == null) {
                             FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
                                     FirebaseAuth.getInstance()
                                             .getCurrentUser().getPhoneNumber()).child("seen").setValue(seen);
-                        }
-                        else
-                        {
-                            HashMap<String,Object> hashMap = new HashMap<>();
-                            hashMap.put("seen",seen);
+                        } else {
+                            HashMap<String, Object> hashMap = new HashMap<>();
+                            hashMap.put("seen", seen);
                             FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
                                     FirebaseAuth.getInstance()
                                             .getCurrentUser().getPhoneNumber()).updateChildren(hashMap);
@@ -459,13 +460,13 @@ public class ChatActivity extends AppCompatActivity {
         );
     }
 
-    private void ensureChatId(){
+    private void ensureChatId() {
         FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("id")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         String CurChatId = null;
-                        if(dataSnapshot.getValue() == null){
+                        if (dataSnapshot.getValue() == null) {
                             DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference().child("chats").push();
                             String chatId = chatRef.getKey();
                             FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
@@ -473,12 +474,14 @@ public class ChatActivity extends AppCompatActivity {
                             FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone)
                                     .child("id").setValue(chatId);
                             CurChatId = chatId;
-                        }else{
+                        } else {
                             CurChatId = dataSnapshot.getValue().toString();
                         }
+                        curChatRef = chatRef.child(CurChatId);
                         getChatMessages(CurChatId);
                         setOnClickListenerForSendButton(CurChatId);
                     }
+
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
 
@@ -486,11 +489,11 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
-    private Task<HttpsCallableResult> notify(Message message , String to) {
+    private Task<HttpsCallableResult> notify(Message message, String to) {
         // Create the arguments to the callable function.
         Map<String, Object> data = new HashMap<>();
         data.put("from", message.getSentby());
-        data.put("text",message.getText());
+        data.put("text", message.getText());
         data.put("to", to);
 
         return FirebaseFunctions.getInstance()
@@ -508,8 +511,8 @@ public class ChatActivity extends AppCompatActivity {
                 SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                 final String text = mMessageEditText.getText().toString();
                 Message message = new Message(mMessageEditText.getText().toString(),
-                        Time.format(new Date())  ,null , 2,userPhone , "both");
-                ChatActivity.this.notify(message ,friendPhone );
+                        Time.format(new Date()), null, 2, userPhone, "both");
+                ChatActivity.this.notify(message, friendPhone);
                 FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
                         .push().setValue(message);
 
@@ -563,28 +566,51 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
     }
+
     private void getChatMessages(String id) {
         ChildEventListener chatListener = new ChildEventListener() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message message = dataSnapshot.getValue(Message.class);
-                if(message.getHave().equals("both") || message.getHave().equals(userPhone)){
+                message.setId(dataSnapshot.getKey());
+                if (message.getHave().equals("both") || message.getHave().equals(userPhone)) {
                     messageAdapter.add(message);
                 }
             }
+
             @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
+
             @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                Toast.makeText(ChatActivity.this,dataSnapshot.toString(),Toast.LENGTH_LONG).show();
+                Message message = dataSnapshot.getValue(Message.class);
+                message.setId(dataSnapshot.getKey());
+                for(int i = 0;i<messages.size();i++){
+                    if(message.getId().equals(messages.get(i).getId())){
+                        messages.remove(i);
+                        break;
+                    }
+                }
+                messageAdapter.notifyDataSetChanged();
+            }
+
             @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
+
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
         };
-        DatabaseReference ref = chatRef.child(id);
-        ref.addChildEventListener(chatListener);
-        childEventListenerHashMap.put(ref, chatListener);
+        curChatRef.addChildEventListener(chatListener);
+        childEventListenerHashMap.put(curChatRef, chatListener);
+    }
+
+    private void deleteMessage(Message message) {
+        curChatRef.child(message.getId()).setValue(null);
     }
 
 
@@ -613,19 +639,17 @@ public class ChatActivity extends AppCompatActivity {
             ref.removeEventListener(listener);
         }
     }
+
     private void checkStatus() {
         FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         User user = dataSnapshot.getValue(User.class);
-                        if(user.getUserStatues().equals("online"))
-                        {
+                        if (user.getUserStatues().equals("online")) {
                             friendStatus.setVisibility(View.VISIBLE);
                             Online = true;
-                        }
-                        else
-                        {
+                        } else {
                             friendStatus.setVisibility(View.GONE);
                             Online = false;
                         }
@@ -638,8 +662,8 @@ public class ChatActivity extends AppCompatActivity {
                 }
         );
     }
-    private void showTyping()
-    {
+
+    private void showTyping() {
         FirebaseDatabase.getInstance().getReference().child("chatList").child(
                 FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
         ).child(friendPhone).child("typing").addListenerForSingleValueEvent(
@@ -648,13 +672,11 @@ public class ChatActivity extends AppCompatActivity {
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.getValue() != null) {
                             if (dataSnapshot.getValue().equals(true)) {
-                                Toast.makeText(getApplicationContext(),"hola",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "hola", Toast.LENGTH_SHORT).show();
                                 friendStatus.setVisibility(View.VISIBLE);
                                 friendStatus.setText(R.string.typing);
-                            }
-                            else
-                            {
-                                if(Online) {
+                            } else {
+                                if (Online) {
                                     friendStatus.setText("Online");
                                 }
                             }
@@ -684,12 +706,10 @@ public class ChatActivity extends AppCompatActivity {
         if (ActivityCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(ChatActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_CODE_GALLERY);
-        }
-        else
-        {
-            Intent intent=new Intent(Intent.ACTION_PICK);
+        } else {
+            Intent intent = new Intent(Intent.ACTION_PICK);
             intent.setType("image/*");
-            startActivityForResult(intent,REQUEST_CODE_GALLERY);
+            startActivityForResult(intent, REQUEST_CODE_GALLERY);
         }
         /*ActivityCompat.requestPermissions(ChatActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 REQUEST_CODE_GALLERY);
@@ -701,19 +721,15 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode==READ_REQUEST_CODE)
-        {
-            if(grantResults.length>0 &&grantResults[0]== PackageManager.PERMISSION_GRANTED)
-            {
-                Intent intent=new Intent(Intent.ACTION_PICK);
+        if (requestCode == READ_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setType("image/*");
-                startActivityForResult(intent,REQUEST_CODE_GALLERY);
-                Toast.makeText(getApplicationContext(),"You  have permission to acscess file location!",
+                startActivityForResult(intent, REQUEST_CODE_GALLERY);
+                Toast.makeText(getApplicationContext(), "You  have permission to acscess file location!",
                         Toast.LENGTH_SHORT).show();
-            }
-            else
-            {
-                Toast.makeText(getApplicationContext(),"You don't have permission to acscess file location!",
+            } else {
+                Toast.makeText(getApplicationContext(), "You don't have permission to acscess file location!",
                         Toast.LENGTH_SHORT).show();
             }
         }
@@ -734,15 +750,12 @@ public class ChatActivity extends AppCompatActivity {
             {
                 boolean cameraAccepted = grantResults[0]==
                         PackageManager.PERMISSION_GRANTED;
-                boolean writeStorageAccepted = grantResults[0]==
+                boolean writeStorageAccepted = grantResults[0] ==
                         PackageManager.PERMISSION_GRANTED;
-                if(cameraAccepted&&writeStorageAccepted)
-                {
+                if (cameraAccepted && writeStorageAccepted) {
                     pickCamera();
-                }
-                else
-                {
-                    Toast.makeText(this,"Permission denied",Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -752,41 +765,36 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK)
-        {
+        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK) {
             Uri selectedImageUri = data.getData();
-            Intent intent = new Intent(ChatActivity.this,ImageSendActivity.class);
-            intent.putExtra("uriPhoto",selectedImageUri.toString());
-            intent.putExtra("friendPhone",friendPhone);
+            Intent intent = new Intent(ChatActivity.this, ImageSendActivity.class);
+            intent.putExtra("uriPhoto", selectedImageUri.toString());
+            intent.putExtra("friendPhone", friendPhone);
             startActivity(intent);
         }
-        if(requestCode == READ_REQUEST_CODE&&resultCode==RESULT_OK)
-        {
+        if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK) {
             Uri uri = null;
-            if(data!=null)
-            {
+            if (data != null) {
                 uri = data.getData();
-                if(uri!=null) {
+                if (uri != null) {
                     send(uri);
                 }
-            }
-            else {
-                Toast.makeText(getApplicationContext(),"Please , select a file ",Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(getApplicationContext(), "Please , select a file ", Toast.LENGTH_LONG).show();
             }
         }
-        if(resultCode==RESULT_OK && requestCode==IMAGE_PICK_CAMERA_CODE)
-        {
-            Toast.makeText(getApplicationContext(),"hi",Toast.LENGTH_LONG).show();
+        if (resultCode == RESULT_OK && requestCode == IMAGE_PICK_CAMERA_CODE) {
+            Toast.makeText(getApplicationContext(), "hi", Toast.LENGTH_LONG).show();
             Uri image = uri_image;
-            Intent intent = new Intent(ChatActivity.this,ImageSendActivity.class);
-            intent.putExtra("uriPhoto",image.toString());
-            intent.putExtra("friendPhone",friendPhone);
+            Intent intent = new Intent(ChatActivity.this, ImageSendActivity.class);
+            intent.putExtra("uriPhoto", image.toString());
+            intent.putExtra("friendPhone", friendPhone);
             startActivity(intent);
 
         }
     }
-    private void send(Uri selectedDocUri)
-    {
+
+    private void send(Uri selectedDocUri) {
         /*progressDialog = new ProgressDialog(this);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         progressDialog.setTitle("loading...");
@@ -803,19 +811,18 @@ public class ChatActivity extends AppCompatActivity {
         task.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Toast.makeText(ChatActivity.this,"done",Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatActivity.this, "done", Toast.LENGTH_SHORT).show();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Toast.makeText(ChatActivity.this,"Failed",Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatActivity.this, "Failed", Toast.LENGTH_SHORT).show();
             }
         });
-        Task<Uri> uriTask =task.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+        Task<Uri> uriTask = task.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
             public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                if(!task.isSuccessful())
-                {
+                if (!task.isSuccessful()) {
                     throw task.getException();
                 }
                 return DocRef.getDownloadUrl();
@@ -823,19 +830,18 @@ public class ChatActivity extends AppCompatActivity {
         }).addOnCompleteListener(new OnCompleteListener<Uri>() {
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
-                if(task.isSuccessful())
-                {
+                if (task.isSuccessful()) {
                     final Uri downloadedUri = task.getResult();
 
                     final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
-                    final Message  message = new Message(downloadedUri.toString()
-                            , Time.format(new Date()) , "IsDOC", 0, userPhone,"both");
+                    final Message message = new Message(downloadedUri.toString()
+                            , Time.format(new Date()), "IsDOC", 0, userPhone, "both");
                     FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("id")
                             .addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                     String CurChatId = null;
-                                    if(dataSnapshot.getValue() == null){
+                                    if (dataSnapshot.getValue() == null) {
                                         DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference().child("chats").push();
                                         String chatId = chatRef.getKey();
                                         FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
@@ -843,7 +849,7 @@ public class ChatActivity extends AppCompatActivity {
                                         FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone)
                                                 .child("id").setValue(chatId);
                                         CurChatId = chatId;
-                                    }else{
+                                    } else {
                                         CurChatId = dataSnapshot.getValue().toString();
                                     }
                                     FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
@@ -854,6 +860,7 @@ public class ChatActivity extends AppCompatActivity {
                                     startActivity(intent);
                                     finish();
                                 }
+
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError databaseError) {
 
@@ -890,9 +897,9 @@ public class ChatActivity extends AppCompatActivity {
         //intent to take camera , save to storage to get high quality
         pickCamera();
     }
-    public void pickCamera()
-    {
-        if(checkCameraPermission()) {
+
+    public void pickCamera() {
+        if (checkCameraPermission()) {
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.TITLE, "New Pic"); // title of pic
             values.put(MediaStore.Images.Media.DESCRIPTION, "image to text"); //description
@@ -900,11 +907,11 @@ public class ChatActivity extends AppCompatActivity {
             Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri_image);
             startActivityForResult(cameraIntent, IMAGE_PICK_CAMERA_CODE);
-        }
-        else {
+        } else {
             ActivityCompat.requestPermissions(this, CameraPermission, CAMERA_REQUEST_CODE);
         }
     }
+
     private boolean checkCameraPermission() {
         //storage permission to get high quality image we have to save image to ex storage first
         boolean result = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == (PackageManager.PERMISSION_GRANTED);

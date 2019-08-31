@@ -123,9 +123,7 @@ public class FriendsActivity extends AppCompatActivity {
 
     private boolean checkIfNumVal(String s) {
         for(int i = 0;i<s.length();i++){
-            if ((s.charAt(i) == '+' || ('0' <= s.charAt(i) && s.charAt(i) <= '9') || s.charAt(i) == ' ')) {
-
-            }else{
+            if ((s.charAt(i) != '+' && ('0' > s.charAt(i) || s.charAt(i) > '9') && s.charAt(i) != ' ')) {
                 return false;
             }
         }
