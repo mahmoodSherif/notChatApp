@@ -117,7 +117,7 @@ public class ImageSendActivity extends AppCompatActivity {
 
                     final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                     final Message  message = new Message(captionEditTxt.getText().toString().trim()
-                            , Time.format(new Date()) , downloadedUri.toString(), 0, userPhone,"both");
+                            , Time.format(new Date()) , downloadedUri.toString(), 0, userPhone);
 
                     FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("id")
                             .addListenerForSingleValueEvent(new ValueEventListener() {

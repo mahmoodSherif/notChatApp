@@ -25,6 +25,7 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -84,6 +85,10 @@ public class ChatActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_GALLERY = 999;
     private static final int CAMERA_REQUEST_CODE = 200;
     private static final int IMAGE_PICK_CAMERA_CODE = 1001;
+
+    // firebase path vars
+    private final String LAST_MESSAGE = "lastMessage";
+
 
     //camera permission
     String CameraPermission[];
@@ -447,7 +452,8 @@ public class ChatActivity extends AppCompatActivity {
                         }
                         curChatRef = chatRef.child(CurChatId);
                         attachChatMessagesListeners();
-                        setOnClickListenerForSendButton(CurChatId);
+                        setOnClickListenerForSendButton();
+                        syncTheLastMessage();
                     }
 
                     @Override
@@ -470,28 +476,18 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-    private void setOnClickListenerForSendButton(final String CurChatId) {
+    private void setOnClickListenerForSendButton() {
 
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
-                final String text = mMessageEditText.getText().toString();
                 Message message = new Message(mMessageEditText.getText().toString(),
                         Time.format(new Date()), null, 2, userPhone);
 
                 ChatActivity.this.notify(message, friendPhone);
-                chatRef.push().setValue(message);
-
-                FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("lastMessage")
-                        .setValue(message);
-                FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone).child("lastMessage")
-                        .setValue(message);
-
-                FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("have messages")
-                        .setValue(true);
-                FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone).child("have messages")
-                        .setValue(true);
+                Map<String,Object> rr = message.toMap(userPhone , friendPhone);
+                curChatRef.push().updateChildren(rr);
 
                 /*FirebaseDatabase.getInstance().getReference().child("chatList")
                         .child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber())
@@ -551,6 +547,7 @@ public class ChatActivity extends AppCompatActivity {
                 if(!message.isHaveByMe()){
                     deleteMessageFromChatList(message);
                 }
+                Log.e("message data changed", "true");
             }
 
             @Override
@@ -559,6 +556,7 @@ public class ChatActivity extends AppCompatActivity {
                 Message message = dataSnapshot.getValue(Message.class);
                 message.setId(dataSnapshot.getKey());
                 deleteMessageFromChatList(message);
+                Log.e("message data changed", "true");
             }
 
             @Override
@@ -588,7 +586,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void deleteMessageForUser(final Message message){
-        chatRef.child(message.getId()).child(userPhone).setValue(false);
+        curChatRef.child(message.getId()).child(userPhone).setValue(false);
     }
 
     @Override
@@ -893,8 +891,37 @@ public class ChatActivity extends AppCompatActivity {
         finish();
     }
 
-    private void updateTheLastMessage(){
+    private void syncTheLastMessage(){
+        // update the last message for user
+        curChatRef.orderByChild(userPhone).equalTo(true).limitToLast(1).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Log.e("change messages","no chang");
+                chatListRef.child(userPhone).child(friendPhone).child(LAST_MESSAGE).setValue(dataSnapshot.getValue());
+                chatListRef.child(userPhone).child(friendPhone).child("have messages").setValue(true);
+            }
 
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("no messages","no Can");
+                chatListRef.child(userPhone).child(friendPhone).child(LAST_MESSAGE).setValue(null);
+                chatListRef.child(userPhone).child(friendPhone).child("have messages").setValue(false);
+            }
+        });
+        // update the last message for friend
+        curChatRef.orderByChild(friendPhone).equalTo(true).limitToLast(1).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                chatListRef.child(friendPhone).child(userPhone).child(LAST_MESSAGE).setValue(dataSnapshot.getValue());
+                chatListRef.child(friendPhone).child(userPhone).child("have messages").setValue(true);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                chatListRef.child(friendPhone).child(userPhone).child(LAST_MESSAGE).setValue(null);
+                chatListRef.child(friendPhone).child(userPhone).child("have messages").setValue(true);
+            }
+        });
     }
 }
 

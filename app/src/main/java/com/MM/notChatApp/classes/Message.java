@@ -1,6 +1,9 @@
 package com.MM.notChatApp.classes;
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Message {
     private String id;
     private String text;
@@ -91,5 +94,17 @@ public class Message {
 
     public void setStatues(int statues) {
         this.statues = statues;
+    }
+
+    public Map<String,Object>toMap(String phone , String fPhone){
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("id",id);
+        result.put("text",text);
+        result.put("time",time);
+        result.put("photoUrl",photoUrl);
+        result.put("sentby",sentby);
+        result.put(phone,true);
+        result.put(fPhone,true);
+        return result;
     }
 }
