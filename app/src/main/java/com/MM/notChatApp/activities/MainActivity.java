@@ -56,7 +56,6 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-
     // database References
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference chatListRef , usersRef ;
@@ -80,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<DatabaseReference, ValueEventListener> valueEventListenerHashMap = new HashMap<>();
     private HashMap<DatabaseReference, ChildEventListener> childEventListenerHashMap = new HashMap<>();
     private HashMap<String ,String > chatIdMap = new HashMap<>();
+
+    // user info
     String userPhone;
 
 
@@ -116,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        mfirebaseAuth = FirebaseAuth.getInstance();
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -125,6 +125,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // auth listener
+        mfirebaseAuth = FirebaseAuth.getInstance();
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -140,154 +142,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
     }
-
-
-    private void setUpSwipeMenuCreator(){
-        creator = new SwipeMenuCreator() {
-
-            @Override
-            public void create(SwipeMenu menu) {
-                // create "open" item
-                SwipeMenuItem openItem = new SwipeMenuItem(
-                        getApplicationContext());
-                // set item background
-                openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
-                        0xCE)));
-                // set item width
-                openItem.setWidth(170);
-                // set item title
-                openItem.setTitle("Open");
-                // set item title fontsize
-                openItem.setTitleSize(18);
-                // set item title font color
-                openItem.setTitleColor(Color.WHITE);
-                // add to menu
-                menu.addMenuItem(openItem);
-
-                // create "delete" item
-                SwipeMenuItem deleteItem = new SwipeMenuItem(
-                        getApplicationContext());
-                // set item background
-                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
-                        0x3F, 0x25)));
-                // set item width
-                deleteItem.setWidth(170);
-                // set a icon
-                deleteItem.setIcon(R.drawable.delete_icon);
-                // add to menu
-                menu.addMenuItem(deleteItem);
-            }
-        };
-
-        // set creator
-        MainListView.setMenuCreator(creator);
-        MainListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-                switch (index) {
-                    case 0:
-                        // open
-                        Intent intent = new Intent(MainActivity.this,userInfo.class);
-                        User user = messagesListAdapter.getItem(position);
-                        intent.putExtra("photo",user.getUserPhotoUrl());
-                        intent.putExtra("name",user.getUserName());
-                        intent.putExtra("bio",user.getUserBio());
-                        intent.putExtra("phone",user.getPhone());
-                        startActivity(intent);
-                        break;
-                    case 1:
-                        // delete
-                       deleteChat(position);
-                        break;
-                }
-                // false : close the menu; true : not close the menu
-                return false;
-            }
-        });
-    }
-
-
-    private void getChatList(){
-        ChildEventListener chatsListener = new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                final String friendPhone = dataSnapshot.getKey();
-                if(dataSnapshot.child("have messages").getValue(boolean.class)) {
-                    final String chatId = dataSnapshot.child("id").getValue(String.class);
-                    messagesListAdapter.add(new User(friendPhone));
-                    chatIdMap.put(friendPhone, chatId);
-                    makeFriendListeners(usersList.size() - 1, friendPhone);
-                }
-            }
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
-            public void onCancelled(@NonNull DatabaseError databaseError) { }
-        };
-        DatabaseReference ref = chatListRef.child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
-        ref.addChildEventListener(chatsListener);
-        childEventListenerHashMap.put(ref, chatsListener);
-    }
-
-    private void makeFriendListeners(final int postion , final String friendPhone){
-        makeFriendNameListener(postion, friendPhone);
-        makeLastMessageListener(postion, friendPhone);
-        makeFriendPhotoListener(postion, friendPhone);
-    }
-
-    private void makeLastMessageListener(final int postion , final String friendPhone){
-        ValueEventListener lastMessageListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                final String lastMessage = dataSnapshot.child("text").getValue(String.class);
-                User user = messagesListAdapter.getItem(postion);
-                user.setLastMessage(lastMessage);
-                usersList.set(postion, user);
-                messagesListAdapter.notifyDataSetChanged();
-            }
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
-        };
-        DatabaseReference ref = chatListRef.child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()).child(friendPhone).child("lastMessage");
-        ref.addValueEventListener(lastMessageListener);
-        valueEventListenerHashMap.put(ref , lastMessageListener);
-    }
-    private void makeFriendNameListener(final int postion , final String friendPhone){
-        ValueEventListener FriendNameListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                final String name = dataSnapshot.getValue(String.class);
-                User user = messagesListAdapter.getItem(postion);
-                user.setUserName(name);
-                usersList.set(postion, user);
-                messagesListAdapter.notifyDataSetChanged();
-            }
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
-        };
-        DatabaseReference ref = usersRef.child(friendPhone).child("userName");
-        ref.addValueEventListener(FriendNameListener);
-        valueEventListenerHashMap.put(ref , FriendNameListener);
-    }
-    private void makeFriendPhotoListener(final int postion , final String friendPhone){
-        ValueEventListener FriendPhotoListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                final String photoUrl = dataSnapshot.getValue(String.class);
-                User user = messagesListAdapter.getItem(postion);
-                user.setUserPhotoUrl(photoUrl);
-                usersList.set(postion, user);
-                messagesListAdapter.notifyDataSetChanged();
-            }
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
-        };
-        DatabaseReference ref = usersRef.child(friendPhone).child("userPhotoUrl");
-        ref.addValueEventListener(FriendPhotoListener);
-        valueEventListenerHashMap.put(ref , FriendPhotoListener);
-    }
-
-
-
-
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -309,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
             ref.removeEventListener(listener);
         }
     }
+
     @Override
     public void onBackPressed() {
         Log.d("MainActivity","onBackPressed");
@@ -327,8 +182,7 @@ public class MainActivity extends AppCompatActivity {
         searchView = (SearchView) item.getActionView();
         return true;
     }
-    private void searchFriends()
-    {
+    private void searchFriends() {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
@@ -413,41 +267,194 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //auth functions
-    private void signIn() {
-        List<AuthUI.IdpConfig> providers = Arrays.asList(
-                new AuthUI.IdpConfig.PhoneBuilder().build()
-        );
 
-        startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setIsSmartLockEnabled(false)
-                        .setAvailableProviders(providers)
-                        .build(),
-                RC_SIGN_IN);
+    // create helper
+    private void setUpSwipeMenuCreator(){
+        creator = new SwipeMenuCreator() {
 
+            @Override
+            public void create(SwipeMenu menu) {
+                // create "open" item
+                SwipeMenuItem openItem = new SwipeMenuItem(
+                        getApplicationContext());
+                // set item background
+                openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
+                        0xCE)));
+                // set item width
+                openItem.setWidth(170);
+                // set item title
+                openItem.setTitle("Open");
+                // set item title fontsize
+                openItem.setTitleSize(18);
+                // set item title font color
+                openItem.setTitleColor(Color.WHITE);
+                // add to menu
+                menu.addMenuItem(openItem);
+
+                // create "delete" item
+                SwipeMenuItem deleteItem = new SwipeMenuItem(
+                        getApplicationContext());
+                // set item background
+                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                        0x3F, 0x25)));
+                // set item width
+                deleteItem.setWidth(170);
+                // set a icon
+                deleteItem.setIcon(R.drawable.delete_icon);
+                // add to menu
+                menu.addMenuItem(deleteItem);
+            }
+        };
+
+        // set creator
+        MainListView.setMenuCreator(creator);
+        MainListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                switch (index) {
+                    case 0:
+                        // open
+                        Intent intent = new Intent(MainActivity.this,userInfo.class);
+                        User user = messagesListAdapter.getItem(position);
+                        intent.putExtra("photo",user.getUserPhotoUrl());
+                        intent.putExtra("name",user.getUserName());
+                        intent.putExtra("bio",user.getUserBio());
+                        intent.putExtra("phone",user.getPhone());
+                        startActivity(intent);
+                        break;
+                    case 1:
+                        // delete
+                       deleteChat(position);
+                        break;
+                }
+                // false : close the menu; true : not close the menu
+                return false;
+            }
+        });
     }
 
-    private void signOut()  {
-        AuthUI.getInstance()
-                .signOut(this)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Toast.makeText(MainActivity.this, "signed Out", Toast.LENGTH_LONG).show();
+    private void makeFriendListeners(final int postion , final String friendPhone){
+        makeFriendNameListener(postion, friendPhone);
+        makeLastMessageListener(postion, friendPhone);
+        makeFriendPhotoListener(postion, friendPhone);
+    }
+
+    private void makeLastMessageListener(final int postion , final String friendPhone){
+        ValueEventListener lastMessageListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.exists())
+                    return;
+                final String lastMessage = dataSnapshot.child("text").getValue(String.class);
+                User user = messagesListAdapter.getItem(postion);
+                user.setLastMessage(lastMessage);
+                usersList.set(postion, user);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        DatabaseReference ref = chatListRef.child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()).child(friendPhone).child("lastMessage");
+        ref.addValueEventListener(lastMessageListener);
+        valueEventListenerHashMap.put(ref , lastMessageListener);
+    }
+
+    private void makeFriendNameListener(final int postion , final String friendPhone){
+        ValueEventListener FriendNameListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final String name = dataSnapshot.getValue(String.class);
+                User user = messagesListAdapter.getItem(postion);
+                user.setUserName(name);
+                usersList.set(postion, user);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        DatabaseReference ref = usersRef.child(friendPhone).child("userName");
+        ref.addValueEventListener(FriendNameListener);
+        valueEventListenerHashMap.put(ref , FriendNameListener);
+    }
+
+    private void makeFriendPhotoListener(final int postion , final String friendPhone){
+        ValueEventListener FriendPhotoListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final String photoUrl = dataSnapshot.getValue(String.class);
+                User user = messagesListAdapter.getItem(postion);
+                user.setUserPhotoUrl(photoUrl);
+                usersList.set(postion, user);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        DatabaseReference ref = usersRef.child(friendPhone).child("userPhotoUrl");
+        ref.addValueEventListener(FriendPhotoListener);
+        valueEventListenerHashMap.put(ref , FriendPhotoListener);
+    }
+
+
+    // chat messages
+    private void getChatList(){
+        ChildEventListener chatsListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                final String friendPhone = dataSnapshot.getKey();
+                if(dataSnapshot.child("have messages").getValue(boolean.class)) {
+                    final String chatId = dataSnapshot.child("id").getValue(String.class);
+                    messagesListAdapter.add(new User(friendPhone));
+                    chatIdMap.put(friendPhone, chatId);
+                    makeFriendListeners(usersList.size() - 1, friendPhone);
+                }
+            }
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onCancelled(@NonNull DatabaseError databaseError) { }
+        };
+        DatabaseReference ref = chatListRef.child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
+        ref.addChildEventListener(chatsListener);
+        childEventListenerHashMap.put(ref, chatsListener);
+    }
+
+    private void deleteChat(final int postion){
+        final User curChatFriend = messagesListAdapter.getItem(postion);
+        final String curPhone = curChatFriend.getPhone();
+        final DatabaseReference ref = chatListRef.child(userPhone).child(curPhone);
+        ref.child("have messages").setValue(false);
+        ref.child("lastMessage").setValue(null);
+
+        final DatabaseReference refForChat = firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone));
+
+        firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone)).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Iterable<DataSnapshot> children = dataSnapshot.getChildren();
+                for(DataSnapshot x : children){
+                    if(x.child("have").getValue(String.class).equals("both")){
+                        x.getRef().child("have").setValue(curPhone);
+                    }else{
+                        x.getRef().removeValue();
                     }
-                });
+                }
+                usersList.remove(postion);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
 
+    // connection
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
-
 
     private void CheckConnection(String phone) {
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -482,33 +489,31 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void deleteChat(final int postion){
-        final User curChatFriend = messagesListAdapter.getItem(postion);
-        final String curPhone = curChatFriend.getPhone();
-        final DatabaseReference ref = chatListRef.child(userPhone).child(curPhone);
-        ref.child("have messages").setValue(false);
 
-        final DatabaseReference refForChat = firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone));
+    //auth functions
+    private void signIn() {
+        List<AuthUI.IdpConfig> providers = Arrays.asList(
+                new AuthUI.IdpConfig.PhoneBuilder().build()
+        );
 
-        firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone)).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Iterable<DataSnapshot> children = dataSnapshot.getChildren();
-                for(DataSnapshot x : children){
-                    if(x.child("have").getValue(String.class).equals("both")){
-                        x.getRef().child("have").setValue(curPhone);
-                    }else{
-                        x.getRef().removeValue();
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setIsSmartLockEnabled(false)
+                        .setAvailableProviders(providers)
+                        .build(),
+                RC_SIGN_IN);
+
+    }
+
+    private void signOut()  {
+        AuthUI.getInstance()
+                .signOut(this)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Toast.makeText(MainActivity.this, "signed Out", Toast.LENGTH_LONG).show();
                     }
-                }
-                usersList.remove(postion);
-                messagesListAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
+                });
     }
 }
