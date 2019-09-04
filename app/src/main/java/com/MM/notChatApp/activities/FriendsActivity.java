@@ -192,7 +192,7 @@ public class FriendsActivity extends AppCompatActivity {
                        }
                     }
 
-        DatabaseReference curUserRef = firebaseDatabase.getReference().child("users").child(number);
+       // DatabaseReference curUserRef = firebaseDatabase.getReference().child("users").child(number);
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
 

@@ -35,6 +35,11 @@
                 android:layout_gravity="right"
                 android:padding="5dp"
                 android:src="@drawable/sent16" />
+            <include
+                android:id="@+id/audioInclue"
+                android:visibility="gone"
+                layout="@layout/audio_layout"
+                />
 
             <TextView
                 android:id="@+id/MessageSend"

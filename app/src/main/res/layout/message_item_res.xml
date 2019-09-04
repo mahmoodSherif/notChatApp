@@ -20,6 +20,12 @@
             android:layout_height="250dp"
             android:adjustViewBounds="true"
             android:visibility="gone" />
+        <include
+            android:id="@+id/audioInclue"
+            android:visibility="gone"
+            layout="@layout/audio_layout"
+            />
+
 
         <TextView
             android:id="@+id/MessageRes"

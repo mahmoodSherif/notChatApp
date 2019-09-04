@@ -18,12 +18,14 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -69,9 +71,13 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.functions.HttpsCallableResult;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -92,6 +98,7 @@ public class ChatActivity extends AppCompatActivity {
     private static final int CAMERA_REQUEST_CODE = 200;
     private static final int IMAGE_PICK_CAMERA_CODE = 1001;
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
+    private static final String LOG_TAG = "recorder" ;
     private String [] permissions ;
 
     // firebase path vars
@@ -116,6 +123,8 @@ public class ChatActivity extends AppCompatActivity {
     private CircleImageView BarFriendImage;
     private TextView friendStatus;
     private ImageButton backButton;
+    private View audioView;
+    private ImageButton play;
 
     //popup menu views
     private ImageView galaryImage;
@@ -130,6 +139,7 @@ public class ChatActivity extends AppCompatActivity {
     private DatabaseReference chatListRef;
     private FirebaseStorage firebaseStorage;
     private StorageReference docRef;
+    private StorageReference audioRef;
 
     // cur chat info
     String userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
@@ -158,6 +168,9 @@ public class ChatActivity extends AppCompatActivity {
     //helper vars
     int countSelected = 0;
 
+     AudioRecord audioRecord;
+     MediaRecorder recorder;
+     MediaPlayer player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -178,6 +191,7 @@ public class ChatActivity extends AppCompatActivity {
 
         firebaseStorage = FirebaseStorage.getInstance();
         docRef = firebaseStorage.getReference().child("chat_docs");
+        audioRef = firebaseStorage.getReference().child("chats_audio");
         //camera permission
         CameraPermission = new String[]{Manifest.permission.CAMERA,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -207,7 +221,8 @@ public class ChatActivity extends AppCompatActivity {
         mPhotoPickerButton = findViewById(R.id.photoPickerButton);
         mMessageEditText = findViewById(R.id.messageEditText);
         mSendButton = findViewById(R.id.sendButton);
-
+        audioView = findViewById(R.id.audioInclue);
+        play = findViewById(R.id.btnPlay);
         messageAdapter = new MessageAdapter(ChatActivity.this, R.layout.message_item_res, messages);
         messagesListView.setAdapter(messageAdapter);
 
@@ -221,6 +236,16 @@ public class ChatActivity extends AppCompatActivity {
         messagesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                /*final Message message = (Message) adapterView.getItemAtPosition(i);
+                if(message.getAudioUrl()!=null)
+                {boolean pause = false;
+                    play.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            audioRecord.playRecord(message.getAudioUrl());
+                        }
+                    });
+                }*/
                 if (mActionMode != null) {
                     // // add or remove selection for current list item
                     view.setBackgroundColor(Color.parseColor("#ff4d4d"));
@@ -266,13 +291,11 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                /*if (charSequence.toString().trim().length() > 0) {
-                    mSendButton.setEnabled(true);
+                if (charSequence.toString().trim().length() > 0) {
                     mSendButton.setClickable(true);
                 } else {
-                    mSendButton.setEnabled(false);
                     mSendButton.setClickable(false);
-                }*/
+                }
 
             }
 
@@ -291,52 +314,109 @@ public class ChatActivity extends AppCompatActivity {
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
 
 
-        fileName = getExternalCacheDir().getAbsolutePath();
-        fileName += "/audiorecord.3gp";
+        fileName = Environment.getExternalStorageDirectory().getAbsolutePath();
+        fileName += "/audiorecord.mp3";
          audioRecord = new AudioRecord(fileName);
         //ActivityCompat.requestPermissions(ChatActivity.this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
         final boolean result = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 == (PackageManager.PERMISSION_GRANTED);
         final boolean result1 = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == (PackageManager.PERMISSION_GRANTED);
-        mSendButton.setOnLongClickListener(new View.OnLongClickListener() {
+        mSendButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public boolean onLongClick(View view) {
-                if (result&&result1) {
-                    if (audioRecord.record()) {
-                        Toast.makeText(getApplicationContext(), "recording..", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(getApplicationContext(), "done", Toast.LENGTH_LONG).show();
-                        //saveRecordToFB();
-                        audioRecord.playRecord();
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                if (result && result1) {
+                    if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                        startRecord();
+                        Toast.makeText(getApplicationContext(), "recording", Toast.LENGTH_LONG).show();
+                    } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                        stopRecord();
+                        Toast.makeText(getApplicationContext(), "stopped", Toast.LENGTH_LONG).show();
+                        saveRecordToFB();
                     }
-                }
-                else {
-                    ActivityCompat.requestPermissions(ChatActivity.this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
                 }
                 return false;
             }
         });
 
     }
+    private void startRecord()
+    {
+        recorder = new MediaRecorder();
+        recorder = new MediaRecorder();
+        recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
+        recorder.setOutputFile(fileName);
+        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
-    private void saveRecordToFB() {
+        try {
+            recorder.prepare();
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "prepare() failed");
+        }
 
+        recorder.start();
     }
+    private void stopRecord()
+    {
+        recorder.stop();
+        recorder.release();
+        recorder = null;
+    }
+    private void saveRecordToFB() {
+        Uri audioUri = Uri.fromFile(new File(fileName));
+        final StorageReference ref =audioRef.child(userPhone+"new_audio.3gp");
+      //  audioRef.child(friendPhone).child(userPhone).child(audioUri.getLastPathSegment()).putFile(audioUri);
+        UploadTask task = ref.putFile(audioUri);
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(ChatActivity.this,"Failed",Toast.LENGTH_SHORT).show();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Toast.makeText(ChatActivity.this,"success",Toast.LENGTH_SHORT).show();
+                ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
+                        final Message  message = new Message(
+                                Time.format(new Date()) , uri.toString(), 0, userPhone,"both");
+                        FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("id")
+                                .addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                        String CurChatId = null;
+                                        if(dataSnapshot.getValue() == null){
+                                            DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference().child("chats").push();
+                                            String chatId = chatRef.getKey();
+                                            FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
+                                                    .child("id").setValue(chatId);
+                                            FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone)
+                                                    .child("id").setValue(chatId);
+                                            CurChatId = chatId;
+                                        }else{
+                                            CurChatId = dataSnapshot.getValue().toString();
+                                        }
+                                        Toast.makeText(getApplicationContext(),"PUSH",Toast.LENGTH_LONG).show();
+                                        FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
+                                                .push().setValue(message);
+                                    }
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if(audioRecord.getRecorder()!=null)
-        {
-            audioRecord.getRecorder().release();
-            audioRecord.setRecorder(null);
-        }
-        if(audioRecord.getPlayer()!=null)
-        {
-            audioRecord.getPlayer().release();
-            audioRecord.setPlayer(null);
-        }
+                                    }
+                                });
+                    }
+                });
+            }
+        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                Toast.makeText(getApplicationContext(),"pro",Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void openDialog() {
@@ -372,6 +452,7 @@ public class ChatActivity extends AppCompatActivity {
                 @Override
                 public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
                     switch (menuItem.getItemId()) {
+
                         case R.id.copyMenu:
                             for (int i = 0; i < messageAdapter.getSelectedIds().size(); i++) {
                                 Message message1 = messageAdapter.getItem(messageAdapter.getSelectedIds()
@@ -512,7 +593,7 @@ public class ChatActivity extends AppCompatActivity {
                         }
                         curChatRef = chatRef.child(CurChatId);
                         attachChatMessagesListeners();
-                        setOnClickListenerForSendButton();
+                        setOnClickListenerForSendButton("");
                         syncTheLastMessage();
                     }
 
@@ -536,11 +617,13 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-    private void setOnClickListenerForSendButton() {
+    private void setOnClickListenerForSendButton(final String CurChatId){
 
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                   if(mMessageEditText.getText().toString().trim().equals(""))
+                            return;
                 SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                 Message message = new Message(mMessageEditText.getText().toString(),
                         Time.format(new Date()), null, 2, userPhone);
@@ -746,12 +829,6 @@ public class ChatActivity extends AppCompatActivity {
             intent.setType("image/*");
             startActivityForResult(intent, REQUEST_CODE_GALLERY);
         }
-        /*ActivityCompat.requestPermissions(ChatActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                REQUEST_CODE_GALLERY);
-       /* Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("image/jpeg");
-        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-        startActivityForResult(Intent.createChooser(intent, "Complete action using"), RC_PHOTO_PICKER);*/
     }
 
     @Override

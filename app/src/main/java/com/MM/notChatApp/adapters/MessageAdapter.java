@@ -2,13 +2,18 @@ package com.MM.notChatApp.adapters;
 
 import android.app.Activity;
 import android.content.Context;
+import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +27,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.target.SizeReadyCallback;
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.io.IOException;
 import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -30,6 +36,8 @@ import java.util.List;
 public class MessageAdapter extends ArrayAdapter<Message> {
     private List<Message>userList;
     private SparseBooleanArray mSelectedItemsIds;
+    private  MediaPlayer player;
+    private int click = 0;
     public MessageAdapter(Context context, int resource, List<Message> objects) {
         super(context, resource, objects);
         userList = objects;
@@ -38,9 +46,10 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Message message = getItem(position);
+        final Message message = getItem(position);
         boolean isPhoto = message.getPhotoUrl()!=null && !message.getPhotoUrl().equals("IsDOC");
         boolean isDoc = false;
+        boolean isAudio = message.getAudioUrl()!=null;
         if(message.getPhotoUrl()!=null && message.getPhotoUrl().equals("IsDOC") )
         {
              isDoc = true;   
@@ -92,7 +101,9 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             ImageView photoMessage = convertView.findViewById(R.id.image);
             messageTextView.setText(message.getText());
             timeTextView.setText(message.getTime());
-            CardView cardView = null;
+            View audioView = convertView.findViewById(R.id.audioInclue);
+           ImageButton playAudio = audioView.findViewById(R.id.btnPlay);
+            SeekBar seekBar = audioView.findViewById(R.id.seekBar);
             if(message.getStatues() == 3)
             {
                 status.setImageResource(R.drawable.read16);
@@ -115,6 +126,32 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                         .centerCrop()
                         .into(photoMessage);
             }
+            else if(isAudio)
+            {
+                MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                //mediaMetadataRetriever.setDataSource(message.getAudioUrl());
+                //String duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                //mediaMetadataRetriever.release();
+                player = new MediaPlayer();
+                seekBar.setMax(player.getDuration());
+                playAudio.setVisibility(View.VISIBLE);
+                audioView.setVisibility(View.VISIBLE);
+                seekBar.setVisibility(View.VISIBLE);
+               // seekBar.setProgress(seekBar.getProgress()+1);
+                playAudio.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        click++;
+                        if(click%2!=0) {
+                            startPlaying(message.getAudioUrl());
+                        }
+                        if(click%2==0)
+                        {
+                            stopPlaying();
+                        }
+                    }
+                });
+            }
            /* else if(isDoc)
             {
                 cardView = convertView.findViewById(R.id.resCardView);
@@ -124,11 +161,27 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             }*/
             else {
                 photoMessage.setVisibility(View.GONE);
+                playAudio.setVisibility(View.GONE);
+                audioView.setVisibility(View.GONE);
+                seekBar.setVisibility(View.GONE);
             }
 
             return convertView;
         }
 
+    }
+    private void startPlaying(String fileName) {
+        try {
+            player.setDataSource(fileName);
+            player.prepare();
+            player.start();
+        } catch (IOException e) {
+            //Log.e(LOG_TAG, "prepare() failed");
+        }
+    }
+    private void stopPlaying() {
+        player.release();
+        player = null;
     }
 
     @Override

@@ -85,7 +85,7 @@ public class AudioRecord {
     private void startRecording() {
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
         recorder.setOutputFile(fileName);
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
@@ -105,7 +105,7 @@ public class AudioRecord {
     }
     public boolean record()
     {
-        boolean recordstatus = false;
+        boolean recordstatus;
         onRecord(mStartRecording);
         if (mStartRecording) {
             recordstatus = false;
@@ -116,8 +116,9 @@ public class AudioRecord {
         return recordstatus;
     }
 
-    public boolean playRecord()
+    public boolean playRecord(String fileName)
     {
+        this.fileName = fileName;
         boolean playstatues;
         onPlay(mStartPlaying);
         if (mStartPlaying) {

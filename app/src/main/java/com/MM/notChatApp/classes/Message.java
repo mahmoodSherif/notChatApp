@@ -9,6 +9,7 @@ public class Message {
     private String text;
     private String time;
     private String photoUrl;
+    private String audioUrl;
     private String sentby;
     private boolean haveByMe;
     private boolean haveByFriend;
@@ -33,6 +34,12 @@ public class Message {
         this.text = text;
         this.time = time;
         this.photoUrl = photoUrl;
+        this.statues = statues;
+        sentby = user;
+    }
+    public Message(String time, String audioUrl, int statues , String user , String have) {
+        this.time = time;
+        this.audioUrl = audioUrl;
         this.statues = statues;
         sentby = user;
     }
@@ -94,6 +101,14 @@ public class Message {
 
     public void setStatues(int statues) {
         this.statues = statues;
+    }
+
+    public String getAudioUrl() {
+        return audioUrl;
+    }
+
+    public void setAudioUrl(String audioUrl) {
+        this.audioUrl = audioUrl;
     }
 
     public Map<String,Object>toMap(String phone , String fPhone){

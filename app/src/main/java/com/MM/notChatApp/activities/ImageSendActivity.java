@@ -15,12 +15,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.classes.Message;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCanceledListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -32,6 +34,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.theartofdev.edmodo.cropper.CropImage;
@@ -51,6 +54,8 @@ public class ImageSendActivity extends AppCompatActivity {
     private Button sendButton;
     private EditText captionEditTxt;
     private ImageView imageView;
+    private DatabaseReference chatRef;
+    private ProgressBar progressBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,8 +64,10 @@ public class ImageSendActivity extends AppCompatActivity {
         sendButton = findViewById(R.id.sendImage);
         captionEditTxt = findViewById(R.id.captionImage);
         imageView = findViewById(R.id.imageMessage);
-
+        progressBar = findViewById(R.id.ProBar);
+        progressBar.setVisibility(View.GONE);
         photosStorageReference = FirebaseStorage.getInstance().getReference().child("chat_photos");
+        chatRef = FirebaseDatabase.getInstance().getReference().child("chatPhotos");
 
         Intent intent = getIntent();
          selectedImageUri = Uri.parse(intent.getStringExtra("uriPhoto"));
@@ -83,10 +90,13 @@ public class ImageSendActivity extends AppCompatActivity {
     }
     private void send()
     {
-        final StorageReference photoRef = photosStorageReference.child(userPhone).child(friendPhone)
+
+      //  final StorageReference photoRef = photosStorageReference.child(userPhone).child(friendPhone)
+        //        .child(selectedImageUri.getLastPathSegment());
+        final StorageReference photoRef = photosStorageReference
                 .child(selectedImageUri.getLastPathSegment());
-        photosStorageReference.child(friendPhone).child(userPhone)
-                .child(selectedImageUri.getLastPathSegment()).putFile(selectedImageUri);
+        //photosStorageReference.child(friendPhone).child(userPhone)
+           //     .child(selectedImageUri.getLastPathSegment()).putFile(selectedImageUri);
         UploadTask task = photoRef.putFile(selectedImageUri);
         task.addOnFailureListener(new OnFailureListener() {
             @Override
@@ -97,6 +107,21 @@ public class ImageSendActivity extends AppCompatActivity {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Toast.makeText(ImageSendActivity.this,"done",Toast.LENGTH_SHORT).show();
+            }
+        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                //progressBar = new ProgressBar();
+                progressBar.setVisibility(View.VISIBLE);
+                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                int currentProgress = (int) progress;
+                progressBar.setProgress(currentProgress);
+
+            }
+        }).addOnCanceledListener(new OnCanceledListener() {
+            @Override
+            public void onCanceled() {
+           progressBar.setVisibility(View.GONE);
             }
         });
         Task<Uri> uriTask =task.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
@@ -144,7 +169,8 @@ public class ImageSendActivity extends AppCompatActivity {
 
                                 }
                             });
-
+                    chatRef.child(userPhone).child(friendPhone).push().setValue(downloadedUri.toString());
+                    chatRef.child(friendPhone).child(userPhone).push().setValue(downloadedUri.toString());
 
                 }
             }
