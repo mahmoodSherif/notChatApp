@@ -16,7 +16,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -26,14 +25,13 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -64,23 +62,22 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.functions.HttpsCallableResult;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.Inflater;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatActivity extends AppCompatActivity {
 
-    // const
+    // keys
     private static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
     private static final int RC_PHOTO_PICKER = 2;
     private static final int READ_REQUEST_CODE = 42;
@@ -116,6 +113,8 @@ public class ChatActivity extends AppCompatActivity {
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference curChatRef;
     private DatabaseReference chatRef;
+    private DatabaseReference userRef;
+    private DatabaseReference chatListRef;
     private FirebaseStorage firebaseStorage;
     private StorageReference docRef;
 
@@ -132,12 +131,16 @@ public class ChatActivity extends AppCompatActivity {
     // maps
     private HashMap<DatabaseReference, ValueEventListener> valueEventListenerHashMap = new HashMap<>();
     private HashMap<DatabaseReference, ChildEventListener> childEventListenerHashMap = new HashMap<>();
+    private HashMap<Integer, Boolean> selected = new HashMap<>();
 
     //action mode Represents a contextual mode of the user interface
     private ActionMode mActionMode;
 
     // listView list
     List<Message> messages = new ArrayList<>();
+
+    //helper vars
+    int countSelected = 0;
 
 
     @Override
@@ -152,7 +155,11 @@ public class ChatActivity extends AppCompatActivity {
             friendPhone = getIntent().getExtras().getString("phone");
         }
 
-        chatRef = FirebaseDatabase.getInstance().getReference().child("chats");
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        chatRef = mFirebaseDatabase.getReference().child("chats");
+        userRef = mFirebaseDatabase.getReference().child("users").child(userPhone);
+        chatListRef = mFirebaseDatabase.getReference().child("chatList");
+
         firebaseStorage = FirebaseStorage.getInstance();
         docRef = firebaseStorage.getReference().child("chat_docs");
         //camera permission
@@ -211,6 +218,7 @@ public class ChatActivity extends AppCompatActivity {
                 view.setActivated(true);
                 messagesListView.setItemChecked(i, true);
                 onListItemSelect(i);
+
                 view.setBackgroundColor(Color.parseColor("#ff0000"));
                 return true;
             }
@@ -277,6 +285,7 @@ public class ChatActivity extends AppCompatActivity {
 
 
     private void onListItemSelect(int position) {
+        // handle the delete button visibility
         messageAdapter.toggleSelection(position);
         boolean hasCheckedItems = messageAdapter.getSelectedCount() > 0;
         if (hasCheckedItems && mActionMode == null) {
@@ -311,11 +320,19 @@ public class ChatActivity extends AppCompatActivity {
                             actionMode.finish();
                             text = "";
                             return true;
-                        case R.id.messageDelete:
+                        case R.id.DeleteMessageForAll:
                             for (int i = 0; i < messageAdapter.getSelectedIds().size(); i++) {
                                 Message message1 = messageAdapter.getItem(messageAdapter.getSelectedIds()
                                         .keyAt(i));
-                                deleteMessage(message1);
+                                deleteMessageForAll(message1);
+                            }
+                            actionMode.finish();
+                            return true;
+                        case R.id.DeleteMessageForUser:
+                            for (int i = 0; i < messageAdapter.getSelectedIds().size(); i++) {
+                                Message message1 = messageAdapter.getItem(messageAdapter.getSelectedIds()
+                                        .keyAt(i));
+                                deleteMessageForUser(message1);
                             }
                             actionMode.finish();
                             return true;
@@ -337,6 +354,18 @@ public class ChatActivity extends AppCompatActivity {
         }
         if (mActionMode != null) {
             mActionMode.setTitle(String.valueOf(messageAdapter.getSelectedCount()));
+        }
+        if(!messages.get(position).getSentby().equals(userPhone)){
+            selected.put(position , selected.get(position) == null || !selected.get(position) );
+            if(selected.get(position)){
+                countSelected++;
+                findViewById(R.id.DeleteMessageForAll).setVisibility(View.GONE);
+            }else{
+                countSelected--;
+                if(countSelected == 0){
+                    findViewById(R.id.DeleteMessageForAll).setVisibility(View.VISIBLE);
+                }
+            }
         }
     }
 
@@ -417,7 +446,7 @@ public class ChatActivity extends AppCompatActivity {
                             CurChatId = dataSnapshot.getValue().toString();
                         }
                         curChatRef = chatRef.child(CurChatId);
-                        getChatMessages(CurChatId);
+                        attachChatMessagesListeners();
                         setOnClickListenerForSendButton(CurChatId);
                     }
 
@@ -449,10 +478,10 @@ public class ChatActivity extends AppCompatActivity {
                 SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                 final String text = mMessageEditText.getText().toString();
                 Message message = new Message(mMessageEditText.getText().toString(),
-                        Time.format(new Date()), null, 2, userPhone, "both");
+                        Time.format(new Date()), null, 2, userPhone);
+
                 ChatActivity.this.notify(message, friendPhone);
-                FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
-                        .push().setValue(message);
+                chatRef.push().setValue(message);
 
                 FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("lastMessage")
                         .setValue(message);
@@ -505,20 +534,23 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-    private void getChatMessages(String id) {
+    private void attachChatMessagesListeners() {
         ChildEventListener chatListener = new ChildEventListener() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message message = dataSnapshot.getValue(Message.class);
                 message.setId(dataSnapshot.getKey());
-                if (message.getHave().equals("both") || message.getHave().equals(userPhone)) {
-                    messageAdapter.add(message);
-                }
+                messageAdapter.add(message);
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Message message = dataSnapshot.getValue(Message.class);
+                message.setId(dataSnapshot.getKey());
+                if(!message.isHaveByMe()){
+                    deleteMessageFromChatList(message);
+                }
             }
 
             @Override
@@ -526,13 +558,7 @@ public class ChatActivity extends AppCompatActivity {
                 Toast.makeText(ChatActivity.this,dataSnapshot.toString(),Toast.LENGTH_LONG).show();
                 Message message = dataSnapshot.getValue(Message.class);
                 message.setId(dataSnapshot.getKey());
-                for(int i = 0;i<messages.size();i++){
-                    if(message.getId().equals(messages.get(i).getId())){
-                        messages.remove(i);
-                        break;
-                    }
-                }
-                messageAdapter.notifyDataSetChanged();
+                deleteMessageFromChatList(message);
             }
 
             @Override
@@ -543,14 +569,27 @@ public class ChatActivity extends AppCompatActivity {
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
         };
-        curChatRef.addChildEventListener(chatListener);
+        curChatRef.orderByChild(userPhone).equalTo(true).addChildEventListener(chatListener);
         childEventListenerHashMap.put(curChatRef, chatListener);
     }
 
-    private void deleteMessage(Message message) {
+    private void deleteMessageFromChatList(Message message) {
+        for(int i = 0;i<messages.size();i++){
+            if(message.getId().equals(messages.get(i).getId())){
+                messages.remove(i);
+                break;
+            }
+        }
+        messageAdapter.notifyDataSetChanged();
+    }
+
+    private void deleteMessageForAll(Message message) {
         curChatRef.child(message.getId()).setValue(null);
     }
 
+    private void deleteMessageForUser(final Message message){
+        chatRef.child(message.getId()).child(userPhone).setValue(false);
+    }
 
     @Override
     protected void onResume() {
@@ -760,7 +799,7 @@ public class ChatActivity extends AppCompatActivity {
 
                     final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                     final Message message = new Message(downloadedUri.toString()
-                            , Time.format(new Date()), "IsDOC", 0, userPhone, "both");
+                            , Time.format(new Date()), "IsDOC", 0, userPhone);
                     FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("id")
                             .addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
@@ -844,6 +883,18 @@ public class ChatActivity extends AppCompatActivity {
         boolean result1 = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == (PackageManager.PERMISSION_GRANTED);
         return result && result1;
+    }
+
+    private void block(){
+        userRef.child("bolcked").child(friendPhone).setValue(true);
+        chatListRef.child(userPhone).child(friendPhone).setValue(null);
+        chatListRef.child(friendPhone).child(userPhone).setValue(null);
+        curChatRef.setValue(null);
+        finish();
+    }
+
+    private void updateTheLastMessage(){
+
     }
 }
 

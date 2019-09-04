@@ -9,8 +9,13 @@
         app:showAsAction="ifRoom|withText"
         />
     <item
-        android:id="@+id/messageDelete"
+        android:id="@+id/DeleteMessageForAll"
+        android:icon="@drawable/delete_icon"
+        android:title="delete for all"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/DeleteMessageForUser"
         android:icon="@drawable/delete_icon"
         android:title="delete"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
 </menu>

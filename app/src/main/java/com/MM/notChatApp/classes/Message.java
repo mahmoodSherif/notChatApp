@@ -7,7 +7,8 @@ public class Message {
     private String time;
     private String photoUrl;
     private String sentby;
-    private String have; // "both" for both users have the message "{user phone}"for the one who has the massage
+    private boolean haveByMe;
+    private boolean haveByFriend;
 
     public String getId() {
         return id;
@@ -25,24 +26,31 @@ public class Message {
     * */
     private int statues;
 
-    public Message(String text, String time, String photoUrl, int statues , String user , String have) {
+    public Message(String text, String time, String photoUrl, int statues , String user) {
         this.text = text;
         this.time = time;
         this.photoUrl = photoUrl;
         this.statues = statues;
         sentby = user;
-        this.have = have;
     }
     public Message() {
 
     }
 
-    public String getHave() {
-        return have;
+    public boolean isHaveByMe() {
+        return haveByMe;
     }
 
-    public void setHave(String have) {
-        this.have = have;
+    public void setHaveByMe(boolean haveByMe) {
+        this.haveByMe = haveByMe;
+    }
+
+    public boolean isHaveByFriend() {
+        return haveByFriend;
+    }
+
+    public void setHaveByFriend(boolean haveByFriend) {
+        this.haveByFriend = haveByFriend;
     }
 
     public String getSentby() {
