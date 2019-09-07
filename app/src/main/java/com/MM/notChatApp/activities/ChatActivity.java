@@ -316,7 +316,6 @@ public class ChatActivity extends AppCompatActivity {
 
         fileName = Environment.getExternalStorageDirectory().getAbsolutePath();
         fileName += "/audiorecord.mp3";
-         audioRecord = new AudioRecord(fileName);
         //ActivityCompat.requestPermissions(ChatActivity.this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
         final boolean result = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 == (PackageManager.PERMISSION_GRANTED);
@@ -325,7 +324,7 @@ public class ChatActivity extends AppCompatActivity {
         mSendButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (result && result1) {
+                if (result && result1 &&mMessageEditText.getText().toString().trim()=="") {
                     if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                         startRecord();
                         Toast.makeText(getApplicationContext(), "recording", Toast.LENGTH_LONG).show();
@@ -334,8 +333,11 @@ public class ChatActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "stopped", Toast.LENGTH_LONG).show();
                         saveRecordToFB();
                     }
+                    return true;
                 }
-                return false;
+                else {
+                    return false;
+                }
             }
         });
 
@@ -593,7 +595,7 @@ public class ChatActivity extends AppCompatActivity {
                         }
                         curChatRef = chatRef.child(CurChatId);
                         attachChatMessagesListeners();
-                        setOnClickListenerForSendButton("");
+                        setOnClickListenerForSendButton();
                         syncTheLastMessage();
                     }
 
@@ -617,7 +619,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-    private void setOnClickListenerForSendButton(final String CurChatId){
+    private void setOnClickListenerForSendButton(){
 
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -47,13 +47,9 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         final Message message = getItem(position);
-        boolean isPhoto = message.getPhotoUrl()!=null && !message.getPhotoUrl().equals("IsDOC");
-        boolean isDoc = false;
+        boolean isPhoto = message.getPhotoUrl()!=null ;
         boolean isAudio = message.getAudioUrl()!=null;
-        if(message.getPhotoUrl()!=null && message.getPhotoUrl().equals("IsDOC") )
-        {
-             isDoc = true;   
-        }
+
         if(!message.getSentby().equals(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber())){
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.message_item_res, parent, false);
             TextView messageTextView = convertView.findViewById(R.id.MessageRes);
@@ -80,13 +76,6 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                         .centerCrop()
                         .into(photoMessage);
             }
-           /* else if(isDoc)
-            {
-                 cardView = convertView.findViewById(R.id.resCardView);
-                TextView docTxt = convertView.findViewById(R.id.resDoctxt);
-                docTxt.setText(message.getText());
-             //   cardView.setVisibility(View.VISIBLE);
-            }*/
             else {
                 photoMessage.setVisibility(View.GONE);
               //  cardView.setVisibility(View.GONE);
@@ -110,6 +99,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             }
             if(isPhoto)
             {
+                Toast.makeText(getContext(),"here",Toast.LENGTH_LONG).show();
                 if(message.getText()==null)
                 {
                     messageTextView.setVisibility(View.GONE);
