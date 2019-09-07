@@ -32,6 +32,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     // database References
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference chatListRef , usersRef ;
+    private DatabaseReference chatRef;
 
     // auth
     private FirebaseAuth mfirebaseAuth;
@@ -78,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
     // maps
     private HashMap<DatabaseReference, ValueEventListener> valueEventListenerHashMap = new HashMap<>();
     private HashMap<DatabaseReference, ChildEventListener> childEventListenerHashMap = new HashMap<>();
+    private HashMap<Query, ValueEventListener> queryHashMap = new HashMap<>();
     private HashMap<String ,String > chatIdMap = new HashMap<>();
 
     // user info
@@ -94,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         firebaseDatabase = FirebaseDatabase.getInstance();
         chatListRef = firebaseDatabase.getReference().child("chatList");
         usersRef = firebaseDatabase.getReference().child("users");
+        chatRef = firebaseDatabase.getReference().child("chats");
 
         MainListView = findViewById(R.id.listView);
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -159,6 +163,11 @@ public class MainActivity extends AppCompatActivity {
         }
         for (Map.Entry<DatabaseReference, ValueEventListener> entry : valueEventListenerHashMap.entrySet()) {
             DatabaseReference ref = entry.getKey();
+            ValueEventListener listener = entry.getValue();
+            ref.removeEventListener(listener);
+        }
+        for (Map.Entry<Query, ValueEventListener> entry : queryHashMap.entrySet()) {
+            Query ref = entry.getKey();
             ValueEventListener listener = entry.getValue();
             ref.removeEventListener(listener);
         }
@@ -340,22 +349,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void makeLastMessageListener(final int postion , final String friendPhone){
-        ValueEventListener lastMessageListener = new ValueEventListener() {
+        final ValueEventListener lastMessageListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Log.e("update :: ",dataSnapshot.toString());
+                for(DataSnapshot x : dataSnapshot.getChildren()) {
+                    final String lastMessage = x.child("text").getValue(String.class);
+                    User user = messagesListAdapter.getItem(postion);
+                    user.setLastMessage(lastMessage);
+                    usersList.set(postion, user);
+                    messagesListAdapter.notifyDataSetChanged();
+                }
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        DatabaseReference idRef = chatListRef.child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()).child(friendPhone).child("id");
+        ValueEventListener idListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(!dataSnapshot.exists())
                     return;
-                final String lastMessage = dataSnapshot.child("text").getValue(String.class);
-                User user = messagesListAdapter.getItem(postion);
-                user.setLastMessage(lastMessage);
-                usersList.set(postion, user);
-                messagesListAdapter.notifyDataSetChanged();
+                Query lastMessageRef = chatRef
+                        .child(dataSnapshot.getValue(String.class)).orderByChild(userPhone).equalTo(true).limitToLast(1);
+                lastMessageRef.addValueEventListener(lastMessageListener);
+                queryHashMap.put(lastMessageRef , lastMessageListener);
             }
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
         };
-        DatabaseReference ref = chatListRef.child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()).child(friendPhone).child("lastMessage");
-        ref.addValueEventListener(lastMessageListener);
-        valueEventListenerHashMap.put(ref , lastMessageListener);
+        idRef.addListenerForSingleValueEvent(idListener);
+        valueEventListenerHashMap.put(idRef , lastMessageListener);
     }
 
     private void makeFriendNameListener(final int postion , final String friendPhone){

@@ -421,6 +421,174 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setSeenIndecator(true);
+        readMessage = true;
+        ensureChatId();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        messageAdapter.clear();
+        setSeenIndecator(false);
+        readMessage = false;
+        for (Map.Entry<DatabaseReference, ChildEventListener> entry : childEventListenerHashMap.entrySet()) {
+            DatabaseReference ref = entry.getKey();
+            ChildEventListener listener = entry.getValue();
+            ref.removeEventListener(listener);
+        }
+        for (Map.Entry<DatabaseReference, ValueEventListener> entry : valueEventListenerHashMap.entrySet()) {
+            DatabaseReference ref = entry.getKey();
+            ValueEventListener listener = entry.getValue();
+            ref.removeEventListener(listener);
+        }
+    }
+
+    private void checkStatus() {
+        FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        User user = dataSnapshot.getValue(User.class);
+                        if (user.getUserStatues().equals("online")) {
+                            friendStatus.setVisibility(View.VISIBLE);
+                            Online = true;
+                        } else {
+                            friendStatus.setVisibility(View.GONE);
+                            Online = false;
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                }
+        );
+    }
+
+    private void showTyping() {
+        FirebaseDatabase.getInstance().getReference().child("chatList").child(
+                FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
+        ).child(friendPhone).child("typing").addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.getValue() != null) {
+                            if (dataSnapshot.getValue().equals(true)) {
+                                Toast.makeText(getApplicationContext(), "hola", Toast.LENGTH_SHORT).show();
+                                friendStatus.setVisibility(View.VISIBLE);
+                                friendStatus.setText(R.string.typing);
+                            } else {
+                                if (Online) {
+                                    friendStatus.setText("Online");
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                }
+        );
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.inchat_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void imageclick(View view) {
+        if (ActivityCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(ChatActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_CODE_GALLERY);
+        } else {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            startActivityForResult(intent, REQUEST_CODE_GALLERY);
+        }
+        /*ActivityCompat.requestPermissions(ChatActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                REQUEST_CODE_GALLERY);
+       /* Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/jpeg");
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        startActivityForResult(Intent.createChooser(intent, "Complete action using"), RC_PHOTO_PICKER);*/
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == READ_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setType("image/*");
+                startActivityForResult(intent, REQUEST_CODE_GALLERY);
+                Toast.makeText(getApplicationContext(), "You  have permission to acscess file location!",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getApplicationContext(), "You don't have permission to acscess file location!",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+        if (requestCode == CAMERA_REQUEST_CODE) {
+            if (grantResults.length > 0) {
+                boolean cameraAccepted = grantResults[0] ==
+                        PackageManager.PERMISSION_GRANTED;
+                boolean writeStorageAccepted = grantResults[0] ==
+                        PackageManager.PERMISSION_GRANTED;
+                if (cameraAccepted && writeStorageAccepted) {
+                    pickCamera();
+                } else {
+                    Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK) {
+            Uri selectedImageUri = data.getData();
+            Intent intent = new Intent(ChatActivity.this, ImageSendActivity.class);
+            intent.putExtra("uriPhoto", selectedImageUri.toString());
+            intent.putExtra("friendPhone", friendPhone);
+            startActivity(intent);
+        }
+        if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK) {
+            Uri uri = null;
+            if (data != null) {
+                uri = data.getData();
+                if (uri != null) {
+                    send(uri);
+                }
+            } else {
+                Toast.makeText(getApplicationContext(), "Please , select a file ", Toast.LENGTH_LONG).show();
+            }
+        }
+        if (resultCode == RESULT_OK && requestCode == IMAGE_PICK_CAMERA_CODE) {
+            Toast.makeText(getApplicationContext(), "hi", Toast.LENGTH_LONG).show();
+            Uri image = uri_image;
+            Intent intent = new Intent(ChatActivity.this, ImageSendActivity.class);
+            intent.putExtra("uriPhoto", image.toString());
+            intent.putExtra("friendPhone", friendPhone);
+            startActivity(intent);
+
+        }
+    }
+
     private void openDialog() {
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         // inflate the custom popup layout
@@ -429,7 +597,6 @@ public class ChatActivity extends AppCompatActivity {
         LinearLayout layoutGallery;
         FloatingView.onShowPopup(this, inflatedView);
     }
-
 
     private void onListItemSelect(int position) {
         // handle the delete button visibility
@@ -596,7 +763,6 @@ public class ChatActivity extends AppCompatActivity {
                         curChatRef = chatRef.child(CurChatId);
                         attachChatMessagesListeners();
                         setOnClickListenerForSendButton();
-                        syncTheLastMessage();
                     }
 
                     @Override
@@ -734,180 +900,6 @@ public class ChatActivity extends AppCompatActivity {
         curChatRef.child(message.getId()).child(userPhone).setValue(false);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        setSeenIndecator(true);
-        readMessage = true;
-        ensureChatId();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        messageAdapter.clear();
-        setSeenIndecator(false);
-        readMessage = false;
-        for (Map.Entry<DatabaseReference, ChildEventListener> entry : childEventListenerHashMap.entrySet()) {
-            DatabaseReference ref = entry.getKey();
-            ChildEventListener listener = entry.getValue();
-            ref.removeEventListener(listener);
-        }
-        for (Map.Entry<DatabaseReference, ValueEventListener> entry : valueEventListenerHashMap.entrySet()) {
-            DatabaseReference ref = entry.getKey();
-            ValueEventListener listener = entry.getValue();
-            ref.removeEventListener(listener);
-        }
-    }
-
-    private void checkStatus() {
-        FirebaseDatabase.getInstance().getReference().child("users").child(friendPhone).addListenerForSingleValueEvent(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        User user = dataSnapshot.getValue(User.class);
-                        if (user.getUserStatues().equals("online")) {
-                            friendStatus.setVisibility(View.VISIBLE);
-                            Online = true;
-                        } else {
-                            friendStatus.setVisibility(View.GONE);
-                            Online = false;
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                }
-        );
-    }
-
-    private void showTyping() {
-        FirebaseDatabase.getInstance().getReference().child("chatList").child(
-                FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
-        ).child(friendPhone).child("typing").addListenerForSingleValueEvent(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.getValue() != null) {
-                            if (dataSnapshot.getValue().equals(true)) {
-                                Toast.makeText(getApplicationContext(), "hola", Toast.LENGTH_SHORT).show();
-                                friendStatus.setVisibility(View.VISIBLE);
-                                friendStatus.setText(R.string.typing);
-                            } else {
-                                if (Online) {
-                                    friendStatus.setText("Online");
-                                }
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                }
-        );
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.inchat_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        return super.onOptionsItemSelected(item);
-    }
-
-    public void imageclick(View view) {
-        if (ActivityCompat.checkSelfPermission(ChatActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(ChatActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    REQUEST_CODE_GALLERY);
-        } else {
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setType("image/*");
-            startActivityForResult(intent, REQUEST_CODE_GALLERY);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == READ_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("image/*");
-                startActivityForResult(intent, REQUEST_CODE_GALLERY);
-                Toast.makeText(getApplicationContext(), "You  have permission to acscess file location!",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getApplicationContext(), "You don't have permission to acscess file location!",
-                        Toast.LENGTH_SHORT).show();
-            }
-        }
-        if(requestCode== REQUEST_RECORD_AUDIO_PERMISSION) {
-            if(grantResults.length>0)
-            {
-                permissionToRecordAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                if(!permissionToRecordAccepted)
-                {
-
-                    Toast.makeText(this,"Permission denied",Toast.LENGTH_LONG).show();
-                }
-            }
-        }
-        if(requestCode == CAMERA_REQUEST_CODE)
-        {
-            if(grantResults.length > 0)
-            {
-                boolean cameraAccepted = grantResults[0]==
-                        PackageManager.PERMISSION_GRANTED;
-                boolean writeStorageAccepted = grantResults[0] ==
-                        PackageManager.PERMISSION_GRANTED;
-                if (cameraAccepted && writeStorageAccepted) {
-                    pickCamera();
-                } else {
-                    Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show();
-                }
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK) {
-            Uri selectedImageUri = data.getData();
-            Intent intent = new Intent(ChatActivity.this, ImageSendActivity.class);
-            intent.putExtra("uriPhoto", selectedImageUri.toString());
-            intent.putExtra("friendPhone", friendPhone);
-            startActivity(intent);
-        }
-        if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK) {
-            Uri uri = null;
-            if (data != null) {
-                uri = data.getData();
-                if (uri != null) {
-                    send(uri);
-                }
-            } else {
-                Toast.makeText(getApplicationContext(), "Please , select a file ", Toast.LENGTH_LONG).show();
-            }
-        }
-        if (resultCode == RESULT_OK && requestCode == IMAGE_PICK_CAMERA_CODE) {
-            Toast.makeText(getApplicationContext(), "hi", Toast.LENGTH_LONG).show();
-            Uri image = uri_image;
-            Intent intent = new Intent(ChatActivity.this, ImageSendActivity.class);
-            intent.putExtra("uriPhoto", image.toString());
-            intent.putExtra("friendPhone", friendPhone);
-            startActivity(intent);
-
-        }
-    }
-
     private void send(Uri selectedDocUri) {
         /*progressDialog = new ProgressDialog(this);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
@@ -1042,37 +1034,5 @@ public class ChatActivity extends AppCompatActivity {
         finish();
     }
 
-    private void syncTheLastMessage(){
-        // update the last message for user
-        curChatRef.orderByChild(userPhone).equalTo(true).limitToLast(1).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Log.e("change messages","no chang");
-                chatListRef.child(userPhone).child(friendPhone).child(LAST_MESSAGE).setValue(dataSnapshot.getValue());
-                chatListRef.child(userPhone).child(friendPhone).child("have messages").setValue(true);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("no messages","no Can");
-                chatListRef.child(userPhone).child(friendPhone).child(LAST_MESSAGE).setValue(null);
-                chatListRef.child(userPhone).child(friendPhone).child("have messages").setValue(false);
-            }
-        });
-        // update the last message for friend
-        curChatRef.orderByChild(friendPhone).equalTo(true).limitToLast(1).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                chatListRef.child(friendPhone).child(userPhone).child(LAST_MESSAGE).setValue(dataSnapshot.getValue());
-                chatListRef.child(friendPhone).child(userPhone).child("have messages").setValue(true);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                chatListRef.child(friendPhone).child(userPhone).child(LAST_MESSAGE).setValue(null);
-                chatListRef.child(friendPhone).child(userPhone).child("have messages").setValue(true);
-            }
-        });
-    }
 }
 
