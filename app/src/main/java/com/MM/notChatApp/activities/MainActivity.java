@@ -458,7 +458,6 @@ public class MainActivity extends AppCompatActivity {
         final String curPhone = curChatFriend.getPhone();
         final DatabaseReference ref = chatListRef.child(userPhone).child(curPhone);
         ref.child("have messages").setValue(false);
-        ref.child("lastMessage").setValue(null);
 
         final DatabaseReference refForChat = firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone));
 
