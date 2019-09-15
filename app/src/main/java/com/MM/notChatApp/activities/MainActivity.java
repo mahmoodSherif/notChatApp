@@ -436,12 +436,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 final String friendPhone = dataSnapshot.getKey();
-                if(dataSnapshot.child("have messages").getValue(boolean.class)) {
-                    final String chatId = dataSnapshot.child("id").getValue(String.class);
-                    messagesListAdapter.add(new User(friendPhone));
-                    chatIdMap.put(friendPhone, chatId);
-                    makeFriendListeners(usersList.size() - 1, friendPhone);
-                }
+                final String chatId = dataSnapshot.child("id").getValue(String.class);
+                messagesListAdapter.add(new User(friendPhone));
+                chatIdMap.put(friendPhone, chatId);
+                makeFriendListeners(usersList.size() - 1, friendPhone);
+
             }
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
