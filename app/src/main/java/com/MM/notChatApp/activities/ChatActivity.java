@@ -233,7 +233,8 @@ public class ChatActivity extends AppCompatActivity {
         messagesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                  view.setBackgroundColor(Color.parseColor("#242424"));
+                onListItemSelect(i);
+                view.setBackgroundColor(Color.parseColor("#242424"));
             }
         });
 
@@ -241,7 +242,7 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 messagesListView.setItemChecked(i, true);
-             //   view.setBackgroundColor(Color.parseColor("#4C525A"));
+                view.setBackgroundColor(Color.parseColor("#4C525A"));
                 onListItemSelect(i);
                 return true;
             }
