@@ -5,4 +5,8 @@
         android:id="@+id/block"
         android:title="Block"
         />
+    <item
+        android:id="@+id/showMedia"
+        android:title="Media"
+        />
 </menu>

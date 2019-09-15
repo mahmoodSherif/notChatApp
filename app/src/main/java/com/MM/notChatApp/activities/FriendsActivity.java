@@ -18,11 +18,13 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.friendsAdapter;
 import com.MM.notChatApp.classes.User;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -39,8 +41,6 @@ public class FriendsActivity extends AppCompatActivity {
 
     // keys
     final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 55;
-    final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
-
     //counter for process bar
     int counter = 0;
 
@@ -67,43 +67,44 @@ public class FriendsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends);
         map = new HashMap<String, Boolean>();
-        // ask for
-        if (ContextCompat.checkSelfPermission(FriendsActivity.this,
-                Manifest.permission.READ_CONTACTS)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // ask for user permission
-            if (ContextCompat.checkSelfPermission(FriendsActivity.this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-                if (!ActivityCompat.shouldShowRequestPermissionRationale(FriendsActivity.this, Manifest.permission.READ_CONTACTS)) {
-                    ActivityCompat.requestPermissions(FriendsActivity.this,
-                            new String[]{Manifest.permission.READ_CONTACTS},
-                            MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-
-                }
-            }
-
-            // UI
-            progressBar = findViewById(R.id.FriendsListProgressBar);
-            FriendsList = findViewById(R.id.FriendsList);
+        adapter = new friendsAdapter(this, R.layout.friends_list_item, users);
+        // UI
+        progressBar = findViewById(R.id.FriendsListProgressBar);
+        FriendsList = findViewById(R.id.FriendsList);
 
             userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
 
             // Database setUp
             firebaseDatabase = FirebaseDatabase.getInstance();
             curUserRef = firebaseDatabase.getReference().child("users").child(userPhone);
+        // ask for
+        if(ActivityCompat.checkSelfPermission(FriendsActivity.this,Manifest.permission.READ_CONTACTS)!=
+                PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(FriendsActivity.this, new String[]{Manifest.permission.READ_CONTACTS},
+                    MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+        }
+        else {
+            setFriendsList();
+        }
+    }
+    private void setFriendsList()
+    {
+        // Database setUp
+        firebaseDatabase = FirebaseDatabase.getInstance();
 
-            FriendsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    User selectedUser = (User) adapterView.getItemAtPosition(i);
-                    Intent intent = new Intent(FriendsActivity.this, ChatActivity.class);
-                    //  intent.putExtra("userFromIntent", (Parcelable) selectedUser);
-                    intent.putExtra("username", selectedUser.getUserName());
-                    intent.putExtra("phone", selectedUser.getPhone());
-                    intent.putExtra("userPhoto", selectedUser.getUserPhotoUrl());
-                    startActivity(intent);
-                }
-            });
+        FriendsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                User selectedUser = (User) adapterView.getItemAtPosition(i);
+                Intent intent = new Intent(FriendsActivity.this, ChatActivity.class);
+                //  intent.putExtra("userFromIntent", (Parcelable) selectedUser);
+                intent.putExtra("username", selectedUser.getUserName());
+                intent.putExtra("phone", selectedUser.getPhone());
+                intent.putExtra("userPhoto", selectedUser.getUserPhotoUrl());
+                startActivity(intent);
+            }
+        });
 
             adapter = new friendsAdapter(this, R.layout.friends_list_item, users);
             FriendsList.setAdapter(adapter);
@@ -124,25 +125,45 @@ public class FriendsActivity extends AppCompatActivity {
                 counter++;
             }
             getBlocked();
-
+        adapter = new friendsAdapter(this, R.layout.friends_list_item, users);
+        FriendsList.setAdapter(adapter);
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+        //   requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
+        //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+        getFromContacts();
+        // }
+        //Toast.makeText(getApplicationContext(),String.valueOf(numbers.size()),Toast.LENGTH_SHORT).show();
+        for (String number : map.keySet()) {
+            if (checkIfNumVal(number)) {
+                Log.v("NEWEE", "new one ");
+                //   String num = numbers.get(i).replaceAll(" ","");
+                // read(num);
+            } else {
+                map.put(number, false);
+            }
+            counter++;
         }
+        read();
+
+
+    }
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent intent = new Intent(FriendsActivity.this,MainActivity.class);
+        startActivity(intent);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)  {
+                    setFriendsList();
                 } else {
-                    finish();
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+                    Toast.makeText(getApplicationContext(), "You don't have permission to acscess file location!",
+                            Toast.LENGTH_SHORT).show();
                 }
-                return;
             }
 
             // other 'case' lines to check for other

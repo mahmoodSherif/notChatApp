@@ -10,6 +10,7 @@ public class Message {
     private String time;
     private String photoUrl;
     private String audioUrl;
+    private String docUrl;
     private String sentby;
     private boolean haveByMe;
     private boolean haveByFriend;
@@ -37,14 +38,28 @@ public class Message {
         this.statues = statues;
         sentby = user;
     }
-    public Message(String time, String audioUrl, int statues , String user , String have) {
+    public Message(String time, String audioUrl, int statues , String user ) {
         this.time = time;
         this.audioUrl = audioUrl;
         this.statues = statues;
         sentby = user;
     }
+    public Message(int statues,String time, String docUrl , String user ) {
+        this.time = time;
+        this.docUrl = docUrl;
+        this.statues = statues;
+        sentby = user;
+    }
     public Message() {
 
+    }
+
+    public String getDocUrl() {
+        return docUrl;
+    }
+
+    public void setDocUrl(String docUrl) {
+        this.docUrl = docUrl;
     }
 
     public boolean isHaveByMe() {
@@ -118,6 +133,8 @@ public class Message {
         result.put("time",time);
         result.put("photoUrl",photoUrl);
         result.put("sentby",sentby);
+        result.put("audioUrl",audioUrl);
+        result.put("docUrl",docUrl);
         result.put(phone,true);
         result.put(fPhone,true);
         return result;
