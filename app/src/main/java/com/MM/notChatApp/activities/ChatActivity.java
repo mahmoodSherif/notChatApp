@@ -136,6 +136,7 @@ public class ChatActivity extends AppCompatActivity {
     private DatabaseReference curChatRef;
     private DatabaseReference chatRef;
     private DatabaseReference userRef;
+    private DatabaseReference friendef;
     private DatabaseReference chatListRef;
     private FirebaseStorage firebaseStorage;
     private StorageReference docRef;
@@ -187,6 +188,7 @@ public class ChatActivity extends AppCompatActivity {
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         chatRef = mFirebaseDatabase.getReference().child("chats");
         userRef = mFirebaseDatabase.getReference().child("users").child(userPhone);
+        friendef = mFirebaseDatabase.getReference().child("users").child(friendPhone);
         chatListRef = mFirebaseDatabase.getReference().child("chatList");
 
         firebaseStorage = FirebaseStorage.getInstance();
@@ -1027,10 +1029,8 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void block(){
-        userRef.child("bolcked").child(friendPhone).setValue(true);
-        chatListRef.child(userPhone).child(friendPhone).setValue(null);
-        chatListRef.child(friendPhone).child(userPhone).setValue(null);
-        curChatRef.setValue(null);
+        userRef.child("blocking").child(friendPhone).setValue(true);
+        friendef.child("blocked").child(userPhone).setValue(true);
         finish();
     }
 

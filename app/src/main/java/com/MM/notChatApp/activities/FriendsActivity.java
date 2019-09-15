@@ -22,6 +22,7 @@ import android.widget.ProgressBar;
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.friendsAdapter;
 import com.MM.notChatApp.classes.User;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -54,10 +55,13 @@ public class FriendsActivity extends AppCompatActivity {
 
     FirebaseDatabase firebaseDatabase;
     DatabaseReference databaseReference;
+    DatabaseReference curUserRef;
     // Request code for READ_CONTACTS
 
     ProgressBar progressBar;
     Map<String, Boolean>map;
+
+    String userPhone;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,8 +86,11 @@ public class FriendsActivity extends AppCompatActivity {
             progressBar = findViewById(R.id.FriendsListProgressBar);
             FriendsList = findViewById(R.id.FriendsList);
 
+            userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+
             // Database setUp
             firebaseDatabase = FirebaseDatabase.getInstance();
+            curUserRef = firebaseDatabase.getReference().child("users").child(userPhone);
 
             FriendsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -116,7 +123,7 @@ public class FriendsActivity extends AppCompatActivity {
                 }
                 counter++;
             }
-            read();
+            getBlocked();
 
         }
     }
@@ -163,8 +170,7 @@ public class FriendsActivity extends AppCompatActivity {
         return true;
     }
 
-    private void read()
-    {
+    private void read() {
         firebaseDatabase.getReference().child("users")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -198,46 +204,6 @@ public class FriendsActivity extends AppCompatActivity {
 
                     }
                 });
-        /*databaseReference = firebaseDatabase.getReference().child("users").child(number);
-
-        curUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
-                    User user = dataSnapshot.getValue(User.class);
-                    boolean ok = false;
-                    if(user!=null)
-                    {
-                        for(int i = 0 ;i<adapter.getCount();i++)
-                        {
-                            if(adapter.getItem(i).getPhone().equals(number))
-                            {
-                                ok = true;
-                            }
-                        }
-                        if(!ok) {
-                            adapter.add(user);
-                        }
-                    }
-
-                //Toast.makeText(getApplicationContext(),number,Toast.LENGTH_SHORT).show();
-                if (counter == numbers.size()) {
-                    progressBar.setVisibility(ProgressBar.INVISIBLE);
-                } else
-                    progressBar.setVisibility(ProgressBar.VISIBLE);
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-        if (counter == numbers.size()) {
-            progressBar.setVisibility(ProgressBar.INVISIBLE);
-        }
-
-*/
     }
 
     public void getFromContacts() {
@@ -274,6 +240,18 @@ public class FriendsActivity extends AppCompatActivity {
             }
         } while (names.moveToNext());
     }
+    private void getBlocked(){
+        curUserRef.child("blocked").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for(DataSnapshot user : dataSnapshot.getChildren()){
+                    map.put(user.getKey() , false);
+                    read();
+                }
+            }
 
-
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
+    }
 }
