@@ -27,6 +27,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -42,7 +43,9 @@ import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 
 public class ImageSendActivity extends AppCompatActivity {
@@ -51,11 +54,13 @@ public class ImageSendActivity extends AppCompatActivity {
     String userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
     String friendPhone = null;
     private Uri selectedImageUri;
-    private Button sendButton;
+    private FloatingActionButton sendButton;
     private EditText captionEditTxt;
     private ImageView imageView;
     private DatabaseReference chatRef;
+    private DatabaseReference curChatRef;
     private ProgressBar progressBar;
+    private String curChatId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,8 +75,11 @@ public class ImageSendActivity extends AppCompatActivity {
         chatRef = FirebaseDatabase.getInstance().getReference().child("chatPhotos");
 
         Intent intent = getIntent();
-         selectedImageUri = Uri.parse(intent.getStringExtra("uriPhoto"));
+        selectedImageUri = Uri.parse(intent.getStringExtra("uriPhoto"));
         friendPhone = intent.getStringExtra("friendPhone");
+        curChatId = intent.getStringExtra("curChatId");
+
+        curChatRef = FirebaseDatabase.getInstance().getReference().child("chats").child(curChatId);
 
         Glide.with(ImageSendActivity.this)
                 .load(selectedImageUri)
@@ -91,12 +99,11 @@ public class ImageSendActivity extends AppCompatActivity {
     private void send()
     {
 
-      //  final StorageReference photoRef = photosStorageReference.child(userPhone).child(friendPhone)
-        //        .child(selectedImageUri.getLastPathSegment());
         final StorageReference photoRef = photosStorageReference
                 .child(selectedImageUri.getLastPathSegment());
-        //photosStorageReference.child(friendPhone).child(userPhone)
-           //     .child(selectedImageUri.getLastPathSegment()).putFile(selectedImageUri);
+
+        chatRef.child(userPhone).child(friendPhone).push().setValue(selectedImageUri.toString());
+        chatRef.child(friendPhone).child(userPhone).push().setValue(selectedImageUri.toString());
         UploadTask task = photoRef.putFile(selectedImageUri);
         task.addOnFailureListener(new OnFailureListener() {
             @Override
@@ -107,11 +114,11 @@ public class ImageSendActivity extends AppCompatActivity {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Toast.makeText(ImageSendActivity.this,"done",Toast.LENGTH_SHORT).show();
+                finish();
             }
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                //progressBar = new ProgressBar();
                 progressBar.setVisibility(View.VISIBLE);
                 double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
                 int currentProgress = (int) progress;
@@ -139,39 +146,12 @@ public class ImageSendActivity extends AppCompatActivity {
                 if(task.isSuccessful())
                 {
                     Uri downloadedUri = task.getResult();
-
                     final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                     final Message  message = new Message(captionEditTxt.getText().toString().trim()
                             , Time.format(new Date()) , downloadedUri.toString(), 0, userPhone);
-
-                    FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("id")
-                            .addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                    String CurChatId = null;
-                                    if(dataSnapshot.getValue() == null){
-                                        DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference().child("chats").push();
-                                        String chatId = chatRef.getKey();
-                                        FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone)
-                                                .child("id").setValue(chatId);
-                                        FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(userPhone)
-                                                .child("id").setValue(chatId);
-                                        CurChatId = chatId;
-                                    }else{
-                                        CurChatId = dataSnapshot.getValue().toString();
-                                    }
-                                    FirebaseDatabase.getInstance().getReference().child("chats").child(CurChatId)
-                                            .push().setValue(message);
-                                    finish();
-                                }
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                }
-                            });
-                    chatRef.child(userPhone).child(friendPhone).push().setValue(downloadedUri.toString());
-                    chatRef.child(friendPhone).child(userPhone).push().setValue(downloadedUri.toString());
-
+                    ChatActivity.notify(message, friendPhone);
+                    Map<String,Object> rr = message.toMap(userPhone , friendPhone);
+                    curChatRef.push().updateChildren(rr);
                 }
             }
         });

@@ -1,6 +1,7 @@
 package com.MM.notChatApp.activities;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -9,12 +10,8 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 
 import com.MM.notChatApp.R;
-import com.MM.notChatApp.activities.ChatActivity;
-import com.MM.notChatApp.activities.FriendsActivity;
 import com.MM.notChatApp.adapters.MessagesListAdapter;
-import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
-import com.MM.notChatApp.dialogs.searchForNewFriend;
 import com.MM.notChatApp.user.setUserNameForFirstTime;
 import com.MM.notChatApp.user.userInfo;
 import com.baoyz.swipemenulistview.SwipeMenu;
@@ -39,6 +36,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 
@@ -319,12 +317,12 @@ public class MainActivity extends AppCompatActivity {
         MainListView.setMenuCreator(creator);
         MainListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
             @Override
-            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+            public boolean onMenuItemClick(final int position, SwipeMenu menu, int index) {
+                User user = messagesListAdapter.getItem(position);
                 switch (index) {
                     case 0:
                         // open
                         Intent intent = new Intent(MainActivity.this,userInfo.class);
-                        User user = messagesListAdapter.getItem(position);
                         intent.putExtra("photo",user.getUserPhotoUrl());
                         intent.putExtra("name",user.getUserName());
                         intent.putExtra("bio",user.getUserBio());
@@ -333,7 +331,21 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case 1:
                         // delete
-                       deleteChat(position);
+                        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                        builder.setMessage("Delete chat with "+user.getUserName()+" ?")
+                                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int pos) {
+                                        deleteChat(position);
+                                    }
+                                    }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        });
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
                         break;
                 }
                 // false : close the menu; true : not close the menu

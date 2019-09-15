@@ -21,10 +21,16 @@
             android:adjustViewBounds="true"
             android:visibility="gone" />
         <include
-            android:id="@+id/audioInclue"
+            android:id="@+id/resAudioInclue"
             android:visibility="gone"
             layout="@layout/audio_layout"
             />
+        <include
+            android:id="@+id/resDocLayout"
+            android:visibility="gone"
+            layout="@layout/doc_layout"
+            />
+
 
 
         <TextView

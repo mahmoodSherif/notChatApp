@@ -40,6 +40,11 @@
                 android:visibility="gone"
                 layout="@layout/audio_layout"
                 />
+            <include
+                android:visibility="gone"
+                android:id="@+id/docLayout"
+                layout="@layout/doc_layout"
+                />
 
             <TextView
                 android:id="@+id/MessageSend"
