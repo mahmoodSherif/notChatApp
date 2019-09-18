@@ -21,6 +21,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 
 import com.MM.notChatApp.R;
@@ -45,16 +46,23 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
     private boolean click = true;
     private int lastPos = -1;
-    boolean newone = false;
-    private Handler handler ;
     private Runnable runnable;
-    private SeekBar myseekBar;
+    private SeekBar seekBar;
 
     public MessageAdapter(Context context, int resource, List<Message> objects) {
         super(context, resource, objects);
         userList = objects;
         mSelectedItemsIds = new SparseBooleanArray();
     }
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(@NonNull android.os.Message msg) {
+            int cp = msg.what;
+            seekBar.setProgress(cp);
+
+        }
+    };
+
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
@@ -78,8 +86,25 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             timeTextView.setText(message.getTime());
             View audioView = convertView.findViewById(R.id.resAudioInclue);
             final ImageButton playAudio = audioView.findViewById(R.id.btnPlay);
-            final SeekBar seekBar = audioView.findViewById(R.id.seekBar);
-            seekBar.setMax(225);
+            //final SeekBar seekBar = audioView.findViewById(R.id.seekBar);
+            seekBar = audioView.findViewById(R.id.seekBar);
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                    seekBar.getProgress();
+                    if(b)
+                    {
+                        player.seekTo(i*1000);
+                        seekBar.setProgress(i);
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {}
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) { }
+            });
             if (isPhoto) {
                 if (message.getText() == null) {
                     messageTextView.setVisibility(View.GONE);
@@ -105,54 +130,73 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                     public void onClick(View view) {
                         handler = new Handler();
                         Message mymessage = getItem(position);
-                        if(position!=lastPos || player==null)
+                        //if user clicks same record
+                        if(lastPos == position)
                         {
-                            if(player!=null) {
+                            if (player==null)
+                            {
+                                Toast.makeText(getContext(),"same but null",Toast.LENGTH_LONG).show();
+                                player = new MediaPlayer();
+                                try {
+                                    player.setDataSource(mymessage.getAudioUrl());
+
+                                } catch (IOException e) {
+                                    Toast.makeText(getContext(),"HERE",Toast.LENGTH_LONG).show();
+                                }
+                                player.prepareAsync();
+                                playAudio.setImageResource(R.drawable.pauseaudio);
+                                player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                                    @Override
+                                    public void onPrepared(MediaPlayer mediaPlayer) {
+                                        seekBar.setMax(player.getDuration());
+                                        player.start();
+                                        seekBar.setProgress(player.getCurrentPosition());
+                                    }
+                                });
+                            }
+                            else if(player.isPlaying())
+                            {
+                                player.pause();
+                                playAudio.setImageResource(R.drawable.playaudio);
+                            }
+                            else {
+                                player.start();
+                                playAudio.setImageResource(R.drawable.pauseaudio);
+                            }
+                        }
+                        else {
+                            if (player!=null)
+                            {
                                 player.stop();
                                 player.release();
-                                player = null;
+                                player =null;
                             }
                             player = new MediaPlayer();
+                            Toast.makeText(getContext(),"new",Toast.LENGTH_LONG).show();
                             try {
                                 player.setDataSource(mymessage.getAudioUrl());
+
                             } catch (IOException e) {
-                                //Log.e(LOG_TAG, "prepare() failed");
+                                Toast.makeText(getContext(),"HERE",Toast.LENGTH_LONG).show();
                             }
                             player.prepareAsync();
+                            playAudio.setImageResource(R.drawable.pauseaudio);
                             player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                                 @Override
                                 public void onPrepared(MediaPlayer mediaPlayer) {
+                                    seekBar.setMax(player.getDuration());
                                     player.start();
-                                 //   playAudio.setImageResource(R.drawable.pauseaudio);
+                                    seekBar.setProgress(player.getCurrentPosition());
                                 }
                             });
-                            seekBar.setMax(player.getDuration()/1000);
-                            runnable = new Runnable() {
-                                @Override
-                                public void run() {
-                                    int mCurrentPosition = player.getCurrentPosition()/1000;
-                                    seekBar.setProgress(mCurrentPosition);
-                                    handler.postDelayed(runnable,1000);
-                                }
-                            };
-                            handler.postDelayed(runnable,1000);
-                        }
-                        if(player.isPlaying()) {
-                            player.pause();
-                            playAudio.setImageResource(R.drawable.playaudio);
                         }
                         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                             @Override
                             public void onCompletion(MediaPlayer mediaPlayer) {
+                                playAudio.setImageResource(R.drawable.playaudio);
                                 player.stop();
                                 player.release();
                                 player = null;
-                                //Toast.makeText(getContext(),"Complete",Toast.LENGTH_SHORT).show();
-                                //playAudio.setImageResource(R.drawable.playaudio);
-                                if (handler!=null)
-                                {
-                                    handler.removeCallbacks(runnable);
-                                }
                             }
                         });
                         lastPos = position;
@@ -161,6 +205,14 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             }
             else {
                 photoMessage.setVisibility(View.GONE);
+            }
+
+            if(getSelectedIds().get(position))
+            {
+                convertView.setBackgroundColor(Color.parseColor("#4C525A"));
+            }
+            else {
+                convertView.setBackgroundColor(Color.parseColor("#242424"));
             }
             return convertView;
 
@@ -178,7 +230,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
             View audioView = convertView.findViewById(R.id.audioInclue);
             final ImageButton playAudio = audioView.findViewById(R.id.btnPlay);
-            final SeekBar seekBar = audioView.findViewById(R.id.seekBar);
+           // final SeekBar seekBar = audioView.findViewById(R.id.seekBar);
+            seekBar = audioView.findViewById(R.id.seekBar);
             //seekBar.setMax(player.getDuration());
             View docView = convertView.findViewById(R.id.docLayout);
             ImageButton docImage = docView.findViewById(R.id.docIcon);
@@ -189,12 +242,18 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                     if(b)
                     {
-                        player.seekTo(i*1000);
+                        if(player!=null) {
+                            player.seekTo(i);
+                            seekBar.setProgress(i);
+                        }
                     }
                 }
 
                 @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {}
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                   // handler.removeCallbacks(runnable);
+                    //updateseek();
+                }
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) { }
@@ -242,14 +301,12 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 playAudio.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        handler = new Handler();
                         Message mymessage = getItem(position);
                         //if user clicks same record
                         if(lastPos == position)
                         {
                             if (player==null)
                             {
-                                Toast.makeText(getContext(),"same but null",Toast.LENGTH_LONG).show();
                                 player = new MediaPlayer();
                                 try {
                                     player.setDataSource(mymessage.getAudioUrl());
@@ -264,7 +321,14 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                                     public void onPrepared(MediaPlayer mediaPlayer) {
                                         seekBar.setMax(player.getDuration());
                                         player.start();
-                                        seekBar.setProgress(player.getCurrentPosition());
+                                        /*updateseek();
+                                        handler = new Handler();/*
+                                        runnable = new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                updateseek();
+                                            }
+                                        };*/
                                     }
                                 });
                             }
@@ -286,7 +350,6 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                                 player =null;
                             }
                             player = new MediaPlayer();
-                            Toast.makeText(getContext(),"new",Toast.LENGTH_LONG).show();
                             try {
                                 player.setDataSource(mymessage.getAudioUrl());
 
@@ -300,7 +363,15 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                                 public void onPrepared(MediaPlayer mediaPlayer) {
                                     seekBar.setMax(player.getDuration());
                                     player.start();
-                                    seekBar.setProgress(player.getCurrentPosition());
+                                   /* updateseek();
+                                    handler = new Handler();/*
+                                    runnable = new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            updateseek();
+
+                                        }
+                                    };*/
                                 }
                             });
                         }
@@ -316,6 +387,22 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                              lastPos = position;
                     }
                 });
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (player!=null)
+                        {
+                            android.os.Message msg = new android.os.Message();
+                            msg.what = player.getCurrentPosition();
+                            handler.sendMessage(msg);
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }).start();
             }
             else {
                 docView.setVisibility(View.GONE);
@@ -326,7 +413,33 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 //docImage.setVisibility(View.GONE);
                 //docText.setVisibility(View.GONE);
             }
+            if(getSelectedIds().get(position))
+            {
+                convertView.setBackgroundColor(Color.parseColor("#4C525A"));
+            }
+            else {
+                convertView.setBackgroundColor(Color.parseColor("#242424"));
+            }
             return convertView;
+        }
+
+    }
+    private void updateseek()
+    {
+        if(player!=null) {
+            Toast.makeText(getContext(),String.valueOf(player.getCurrentPosition()),Toast.LENGTH_LONG).show();
+            seekBar.setProgress(player.getCurrentPosition());
+            handler = new Handler();
+            if(player.isPlaying())
+            {
+                runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                     updateseek();
+                    }
+                };
+                handler.postDelayed(runnable,1000);
+            }
         }
 
     }

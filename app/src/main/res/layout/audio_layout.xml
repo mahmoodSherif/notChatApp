@@ -15,9 +15,8 @@
         android:src="@android:drawable/ic_media_play" />
 
     <SeekBar
-        android:max="100"
         android:layout_gravity="center"
         android:id="@+id/seekBar"
-        android:layout_width="match_parent"
+        android:layout_width="100dp"
         android:layout_height="wrap_content" />
     </LinearLayout>

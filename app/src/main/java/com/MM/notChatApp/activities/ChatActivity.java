@@ -233,8 +233,18 @@ public class ChatActivity extends AppCompatActivity {
         messagesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                onListItemSelect(i);
-                view.setBackgroundColor(Color.parseColor("#242424"));
+                if(mActionMode !=null) {
+                    if(messageAdapter.getSelectedIds().get(i))
+                    {
+                        onListItemSelect(i);
+                        view.setBackgroundColor(Color.parseColor("#242424"));
+                    }
+                    else {
+                        messagesListView.setItemChecked(i, true);
+                        onListItemSelect(i);
+                        view.setBackgroundColor(Color.parseColor("#4C525A"));
+                    }
+                }
             }
         });
 
@@ -283,10 +293,10 @@ public class ChatActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
                 if (!TextUtils.isEmpty(editable.toString()) && editable.toString().trim().length() == 1) {
                     typing = true;
-                    setTypingIndecator(true);
+                   //setTypingIndecator(true);
                 } else if (editable.toString().trim().length() == 0 && typing) {
                     typing = false;
-                    setTypingIndecator(false);
+                  //  setTypingIndecator(false);
                 }
                 mSendButton.setClickable(true);
             }
@@ -484,6 +494,9 @@ public class ChatActivity extends AppCompatActivity {
                 Intent intent = new Intent(ChatActivity.this,MediaActivity.class);
                 intent.putExtra("friendPhone",friendPhone);
                 startActivity(intent);
+                break;
+            case R.id.block:
+                block();
                 break;
         }
         return super.onOptionsItemSelected(item);
