@@ -1,22 +1,31 @@
 package com.MM.notChatApp.activities;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.UserHandle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.friendsAdapter;
-import com.MM.notChatApp.classes.Group;
 import com.MM.notChatApp.classes.User;
 import com.MM.notChatApp.pass;
+import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -29,7 +38,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class NewGroupActivity extends AppCompatActivity {
+
+
+    private static final int REQUEST_CODE_GALLERY = 999;
 
     ListView newGroupList;
     Set<Integer> selectedUsers;
@@ -40,6 +54,10 @@ public class NewGroupActivity extends AppCompatActivity {
     String userPhone;
 
     DatabaseReference chatsRef , chatListRef , usersRef;
+
+    //dialog
+     EditText groupNameET;
+    CircleImageView groupImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,11 +84,7 @@ public class NewGroupActivity extends AppCompatActivity {
         checkFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                for(int pos : selectedUsers){
-                    users.add(pass.list.get(pos).getPhone());
-                }
-                createGroup();
-                Intent intent = new Intent(NewGroupActivity.this,ChatActivity.class);
+                createDialog();
             }
         });
 
@@ -87,7 +101,7 @@ public class NewGroupActivity extends AppCompatActivity {
 
             }
         });
-    }
+    }/*
     private void createGroup(){
         users.add(userPhone);
         final Group group = new Group(null,"name test","photo test",users);
@@ -95,6 +109,58 @@ public class NewGroupActivity extends AppCompatActivity {
         final String id = groupRef.getKey();
         for(String cur : users){
             chatListRef.child(cur).child(id).setValue(group);
+        }
+    }*/
+    private void createDialog()
+    {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        final View dialogView = inflater.inflate(R.layout.add_group_layout, null);
+        dialogBuilder.setView(dialogView);
+         groupNameET =  dialogView.findViewById(R.id.groupNameET);
+         groupImage = dialogView.findViewById(R.id.addGroupPhoto);
+        dialogBuilder.setTitle("new group");
+        dialogBuilder.setMessage("Enter group info");
+        groupImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (ActivityCompat.checkSelfPermission(NewGroupActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(NewGroupActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            REQUEST_CODE_GALLERY);
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_PICK);
+                    intent.setType("image/*");
+                    startActivityForResult(intent, REQUEST_CODE_GALLERY);
+                }
+            }
+        });
+        dialogBuilder.setPositiveButton("Done", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+               if(groupNameET.getText().toString().length()==0)
+               {
+                   Toast.makeText(getApplicationContext(),"set group name",Toast.LENGTH_LONG).show();
+               }
+               else {
+                   groupName = groupNameET.getText().toString().trim();
+                   for(int pos : selectedUsers){
+                       users.add(pass.list.get(pos).getPhone());
+                   }
+                   // createGroup();
+                   Intent intent = new Intent(NewGroupActivity.this,ChatActivity.class);
+               }
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK) {
+            Uri selectedImageUri = data.getData();
+            groupPhoto = selectedImageUri;
+            Glide.with(groupImage.getContext())
+                    .load(selectedImageUri)
+                    .into(groupImage);
         }
     }
 }
