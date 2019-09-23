@@ -42,8 +42,10 @@ import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -76,7 +78,7 @@ public class ImageSendActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         selectedImageUri = Uri.parse(intent.getStringExtra("uriPhoto"));
-        friendPhone = intent.getStringExtra("friendPhone");
+        friendPhone = intent.getStringExtra("chatId");
         curChatId = intent.getStringExtra("curChatId");
 
         curChatRef = FirebaseDatabase.getInstance().getReference().child("chats").child(curChatId);
@@ -150,7 +152,7 @@ public class ImageSendActivity extends AppCompatActivity {
                     final Message  message = new Message(captionEditTxt.getText().toString().trim()
                             , Time.format(new Date()) , downloadedUri.toString(), 0, userPhone);
                     ChatActivity.notify(message, friendPhone);
-                    Map<String,Object> rr = message.toMap(userPhone , friendPhone);
+                    Map<String,Object> rr = message.toMap(new ArrayList<String>(Arrays.asList(userPhone , friendPhone)));
                     curChatRef.push().updateChildren(rr);
                 }
             }

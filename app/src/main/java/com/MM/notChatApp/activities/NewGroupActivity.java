@@ -1,6 +1,5 @@
 package com.MM.notChatApp.activities;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,7 +11,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.UserHandle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,18 +19,16 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.MM.notChatApp.DBvars;
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.friendsAdapter;
-import com.MM.notChatApp.classes.User;
+import com.MM.notChatApp.classes.Group;
 import com.MM.notChatApp.pass;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -84,7 +80,18 @@ public class NewGroupActivity extends AppCompatActivity {
         checkFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                createDialog();
+                //createDialog();
+
+                /// start test
+                for(int pos : selectedUsers){
+                    users.add(pass.list.get(pos).getPhone());
+                }
+                if(!users.contains(userPhone))
+                    users.add(userPhone);
+                addNewGroup("new group baby", "uri" , users);
+                /// end test
+
+                Log.v("fab pressed" , "true");
             }
         });
 
@@ -162,5 +169,19 @@ public class NewGroupActivity extends AppCompatActivity {
                     .load(selectedImageUri)
                     .into(groupImage);
         }
+    }
+    private void addNewGroup(String groupName, String uri, ArrayList<String> members){
+        String DBGroupid = pass.groupRef.push().getKey();
+        String DBGroupChatid = pass.chatRef.push().getKey();
+
+        Group newGroup = new Group(DBGroupid , groupName , uri , members);
+        pass.groupRef.child(DBGroupid).setValue(newGroup);
+
+        members.add(userPhone);
+        for(String cur : members){
+            pass.chatListRef.child(cur).child(DBGroupid).child(DBvars.GROUP.isGroup).setValue(true);
+            pass.chatListRef.child(cur).child(DBGroupid).child(DBvars.GROUP.id).setValue(DBGroupChatid);
+        }
+        Log.v("Group" , "new group has been added");
     }
 }

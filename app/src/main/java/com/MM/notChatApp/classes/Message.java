@@ -1,6 +1,7 @@
 package com.MM.notChatApp.classes;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -126,7 +127,7 @@ public class Message {
         this.audioUrl = audioUrl;
     }
 
-    public Map<String,Object>toMap(String phone , String fPhone){
+    public Map<String,Object>toMap(ArrayList<String> users){
         HashMap<String, Object> result = new HashMap<>();
         result.put("id",id);
         result.put("text",text);
@@ -136,8 +137,9 @@ public class Message {
         result.put("audioUrl",audioUrl);
         result.put("docUrl",docUrl);
         result.put("statues",statues);
-        result.put(phone,true);
-        result.put(fPhone,true);
+        for(String phone : users){
+            result.put(phone,true);
+        }
         return result;
     }
 }
