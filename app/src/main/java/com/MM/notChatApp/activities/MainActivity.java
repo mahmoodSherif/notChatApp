@@ -461,30 +461,10 @@ public class MainActivity extends AppCompatActivity {
     private void makeGroupListeners(final int postion , String id ){
         isGroup.add(id);
         makeGroupNameListener(postion , id);
-        makeGroupLastMessageListener(postion , id);
+        makeLastMessageListener(postion , id);
         //makeGroupPhotoListener(postion , id);
     }
 
-    private void makeGroupLastMessageListener(final int postion , String id){
-        final ValueEventListener lastMessageListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Log.e("update :: ",dataSnapshot.toString());
-                for(DataSnapshot x : dataSnapshot.getChildren()) {
-                    final String lastMessage = x.child("text").getValue(String.class);
-                    User user = messagesListAdapter.getItem(postion);
-                    user.setLastMessage(lastMessage);
-                    usersList.set(postion, user);
-                    messagesListAdapter.notifyDataSetChanged();
-                }
-            }
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
-        };
-        Query lastMessageRef = chatRef
-                .child(id).orderByChild(pass.userPhone).equalTo(true).limitToLast(1);
-        lastMessageRef.addValueEventListener(lastMessageListener);
-        queryHashMap.put(lastMessageRef , lastMessageListener);
-    }
 
     private void makeGroupNameListener(final int postion , final String id){
 
