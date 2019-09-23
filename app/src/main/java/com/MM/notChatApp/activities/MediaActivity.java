@@ -42,7 +42,7 @@ public class MediaActivity extends AppCompatActivity {
 
         //get intent from chat activity
          Intent intent = getIntent();
-        friendName = intent.getStringExtra("friendPhone");
+        friendName = intent.getStringExtra("chatId");
         userName = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
         //get Ref
         photosRef = FirebaseDatabase.getInstance().getReference().child("chatPhotos")

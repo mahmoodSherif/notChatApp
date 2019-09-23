@@ -9,9 +9,11 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 
+import com.MM.notChatApp.DBvars;
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.MessagesListAdapter;
 import com.MM.notChatApp.classes.User;
+import com.MM.notChatApp.pass;
 import com.MM.notChatApp.user.setUserNameForFirstTime;
 import com.MM.notChatApp.user.userInfo;
 import com.baoyz.swipemenulistview.SwipeMenu;
@@ -50,6 +52,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -80,9 +83,9 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<DatabaseReference, ChildEventListener> childEventListenerHashMap = new HashMap<>();
     private HashMap<Query, ValueEventListener> queryHashMap = new HashMap<>();
     private HashMap<String ,String > chatIdMap = new HashMap<>();
+    private HashSet<String> isGroup = new HashSet<>();
 
     // user info
-    String userPhone;
 
 
 
@@ -114,6 +117,8 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("username", user.getUserName());
                 intent.putExtra("phone", user.getPhone());
                 intent.putExtra("userPhoto", user.getUserPhotoUrl());
+                Log.v("the id of cliecked ::: " ,user.getPhone() );
+                intent.putExtra("isGroup",isGroup.contains(user.getPhone()));
                 startActivity(intent);
             }
         });
@@ -134,16 +139,18 @@ public class MainActivity extends AppCompatActivity {
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                    userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+                    pass.userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
                     getChatList();
                 } else {
                     signIn();
-                }
-                userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
-                FirebaseMessaging.getInstance().subscribeToTopic("user_"+userPhone.substring(1));
+                };
+                FirebaseMessaging.getInstance().subscribeToTopic("user_"+pass.userPhone.substring(1));
             }
         };
     }
+
+
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -375,14 +382,14 @@ public class MainActivity extends AppCompatActivity {
             }
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         };
-        DatabaseReference idRef = chatListRef.child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()).child(friendPhone).child("id");
+        DatabaseReference idRef = chatListRef.child(pass.userPhone).child(friendPhone).child("id");
         ValueEventListener idListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(!dataSnapshot.exists())
                     return;
                 Query lastMessageRef = chatRef
-                        .child(dataSnapshot.getValue(String.class)).orderByChild(userPhone).equalTo(true).limitToLast(1);
+                        .child(dataSnapshot.getValue(String.class)).orderByChild(pass.userPhone).equalTo(true).limitToLast(1);
                 lastMessageRef.addValueEventListener(lastMessageListener);
                 queryHashMap.put(lastMessageRef , lastMessageListener);
             }
@@ -430,16 +437,90 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void makeGroupListeners(final int postion , String id ){
+        isGroup.add(id);
+        makeGroupNameListener(postion , id);
+        makeGroupLastMessageListener(postion , id);
+        //makeGroupPhotoListener(postion , id);
+    }
+
+    private void makeGroupLastMessageListener(final int postion , String id){
+        final ValueEventListener lastMessageListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Log.e("update :: ",dataSnapshot.toString());
+                for(DataSnapshot x : dataSnapshot.getChildren()) {
+                    final String lastMessage = x.child("text").getValue(String.class);
+                    User user = messagesListAdapter.getItem(postion);
+                    user.setLastMessage(lastMessage);
+                    usersList.set(postion, user);
+                    messagesListAdapter.notifyDataSetChanged();
+                }
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        Query lastMessageRef = chatRef
+                .child(id).orderByChild(pass.userPhone).equalTo(true).limitToLast(1);
+        lastMessageRef.addValueEventListener(lastMessageListener);
+        queryHashMap.put(lastMessageRef , lastMessageListener);
+    }
+
+    private void makeGroupNameListener(final int postion , final String id){
+
+        ValueEventListener FriendNameListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final String name = dataSnapshot.getValue(String.class);
+                User user = messagesListAdapter.getItem(postion);
+                user.setUserName(name);
+                usersList.set(postion, user);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+
+        DatabaseReference ref = pass.groupRef.child(id).child(DBvars.GROUP.groupName);
+        ref.addValueEventListener(FriendNameListener);
+        valueEventListenerHashMap.put(ref , FriendNameListener);
+    }
+
+    private void makeGroupPhotoListener(final int postion , final String id){
+        ValueEventListener FriendPhotoListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final String photoUrl = dataSnapshot.getValue(String.class);
+                User user = messagesListAdapter.getItem(postion);
+                user.setUserPhotoUrl(photoUrl);
+                usersList.set(postion, user);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        DatabaseReference ref = pass.groupRef.child(id).child(DBvars.GROUP.photoUrl);
+        ref.addValueEventListener(FriendPhotoListener);
+        valueEventListenerHashMap.put(ref , FriendPhotoListener);
+    }
+
+
+
     // chat messages
     private void getChatList(){
         ChildEventListener chatsListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                final String friendPhone = dataSnapshot.getKey();
-                final String chatId = dataSnapshot.child("id").getValue(String.class);
-                messagesListAdapter.add(new User(friendPhone));
-                chatIdMap.put(friendPhone, chatId);
-                makeFriendListeners(usersList.size() - 1, friendPhone);
+                if(dataSnapshot.child(DBvars.GROUP.isGroup).exists()){
+                    final String id = dataSnapshot.getKey();
+                    messagesListAdapter.add(new User(id));
+                    chatIdMap.put(id, id);
+                    isGroup.add(id);
+                    makeGroupListeners(usersList.size()-1 , id);
+                }else {
+                    final String friendPhone = dataSnapshot.getKey();
+                    final String chatId = dataSnapshot.child("id").getValue(String.class);
+                    messagesListAdapter.add(new User(friendPhone));
+                    chatIdMap.put(friendPhone, chatId);
+                    makeFriendListeners(usersList.size() - 1, friendPhone);
+                }
 
             }
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
@@ -447,7 +528,7 @@ public class MainActivity extends AppCompatActivity {
             public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
             public void onCancelled(@NonNull DatabaseError databaseError) { }
         };
-        DatabaseReference ref = chatListRef.child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
+        DatabaseReference ref = chatListRef.child(pass.userPhone);
         ref.addChildEventListener(chatsListener);
         childEventListenerHashMap.put(ref, chatsListener);
     }
@@ -455,7 +536,7 @@ public class MainActivity extends AppCompatActivity {
     private void deleteChat(final int postion){
         final User curChatFriend = messagesListAdapter.getItem(postion);
         final String curPhone = curChatFriend.getPhone();
-        final DatabaseReference ref = chatListRef.child(userPhone).child(curPhone);
+        final DatabaseReference ref = chatListRef.child(pass.userPhone).child(curPhone);
         ref.child("have messages").setValue(false);
 
         final DatabaseReference refForChat = firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone));

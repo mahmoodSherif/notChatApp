@@ -14,8 +14,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -23,6 +26,7 @@ import android.widget.Toast;
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.friendsAdapter;
 import com.MM.notChatApp.classes.User;
+import com.MM.notChatApp.pass;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
@@ -31,6 +35,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,6 +51,7 @@ public class FriendsActivity extends AppCompatActivity {
 
     //GUI elements
     ListView FriendsList;
+    ImageView checkImage;
 
     //listView
     friendsAdapter adapter;
@@ -71,6 +77,7 @@ public class FriendsActivity extends AppCompatActivity {
         // UI
         progressBar = findViewById(R.id.FriendsListProgressBar);
         FriendsList = findViewById(R.id.FriendsList);
+        checkImage = findViewById(R.id.check);
 
             userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
 
@@ -274,5 +281,23 @@ public class FriendsActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.friends_activity_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if(item.getItemId() == R.id.newGroup) {
+            pass.list.clear();
+            pass.list.addAll(users);
+            Intent intent = new Intent(FriendsActivity.this,NewGroupActivity.class);
+            startActivity(intent);
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

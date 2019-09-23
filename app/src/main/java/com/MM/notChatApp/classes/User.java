@@ -5,7 +5,9 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class User {
+import java.io.Serializable;
+
+public class User  {
     private String UserName;
     private String phone;
     private String UserPhotoUrl;

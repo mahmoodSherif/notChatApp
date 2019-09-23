@@ -12,5 +12,8 @@ public interface DBvars {
         String groupMembers = "groupMembers";
         String groupName = "groupName";
         String photoUrl = "photoUrl";
+        String id = "id";
+        String isGroup = "isGroup";
     }
+
 }

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.MM.notChatApp.R;
@@ -29,7 +30,6 @@ public class friendsAdapter extends ArrayAdapter<User> {
         CircleImageView friendImage = convertView.findViewById(R.id.friendImage);
         TextView friendName = convertView.findViewById(R.id.friendName);
         TextView Bio = convertView.findViewById(R.id.FriendBio);
-
         User user = getItem(position);
 
         Glide.with(friendImage.getContext())
