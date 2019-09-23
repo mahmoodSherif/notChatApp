@@ -235,6 +235,8 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent intent = new Intent(MainActivity.this,settingesActivity.class);
+            startActivity(intent);
             return true;
         }
         if (id == R.id.signOut) {
@@ -249,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
         if(id == R.id.searchMenu)
         {
             searchFriends();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -358,6 +361,7 @@ public class MainActivity extends AppCompatActivity {
         makeFriendNameListener(postion, friendPhone);
         makeLastMessageListener(postion, friendPhone);
         makeFriendPhotoListener(postion, friendPhone);
+        makeFriendBioListener(postion,friendPhone);
     }
 
     private void makeLastMessageListener(final int postion , final String friendPhone){
@@ -425,6 +429,23 @@ public class MainActivity extends AppCompatActivity {
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         };
         DatabaseReference ref = usersRef.child(friendPhone).child("userPhotoUrl");
+        ref.addValueEventListener(FriendPhotoListener);
+        valueEventListenerHashMap.put(ref , FriendPhotoListener);
+    }
+    private void makeFriendBioListener(final int position,final String friendPhone)
+    {
+        ValueEventListener FriendPhotoListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final String photoUrl = dataSnapshot.getValue(String.class);
+                User user = messagesListAdapter.getItem(position);
+                user.setUserBio(photoUrl);
+                usersList.set(position, user);
+                messagesListAdapter.notifyDataSetChanged();
+            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        };
+        DatabaseReference ref = usersRef.child(friendPhone).child("userBio");
         ref.addValueEventListener(FriendPhotoListener);
         valueEventListenerHashMap.put(ref , FriendPhotoListener);
     }

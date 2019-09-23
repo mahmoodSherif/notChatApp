@@ -135,6 +135,7 @@ public class Message {
         result.put("sentby",sentby);
         result.put("audioUrl",audioUrl);
         result.put("docUrl",docUrl);
+        result.put("statues",statues);
         result.put(phone,true);
         result.put(fPhone,true);
         return result;

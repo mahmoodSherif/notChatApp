@@ -265,7 +265,6 @@ public class ChatActivity extends AppCompatActivity {
                 .into(BarFriendImage);
         checkStatus();
         showTyping();
-        setSeenIndecator(true);
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -285,8 +284,10 @@ public class ChatActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.toString().trim().length() > 0) {
                    mSendButton.setImageResource(R.drawable.bluesend);
+                   setTypingIndecator(true);
                 } else {
                     mSendButton.setImageResource(R.drawable.microphone);
+                    setTypingIndecator(false);
                 }
             }
             @Override
@@ -406,7 +407,6 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        setSeenIndecator(true);
         readMessage = true;
         ensureChatId();
     }
@@ -415,7 +415,6 @@ public class ChatActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         messageAdapter.clear();
-        setSeenIndecator(false);
         readMessage = false;
         for (Map.Entry<DatabaseReference, ChildEventListener> entry : childEventListenerHashMap.entrySet()) {
             DatabaseReference ref = entry.getKey();
@@ -453,15 +452,12 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void showTyping() {
-        FirebaseDatabase.getInstance().getReference().child("chatList").child(
-                FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
-        ).child(friendPhone).child("typing").addListenerForSingleValueEvent(
+        chatListRef.child(userPhone).child(friendPhone).child("typing").addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.getValue() != null) {
                             if (dataSnapshot.getValue().equals(true)) {
-                                Toast.makeText(getApplicationContext(), "hola", Toast.LENGTH_SHORT).show();
                                 friendStatus.setVisibility(View.VISIBLE);
                                 friendStatus.setText(R.string.typing);
                             } else {
@@ -677,22 +673,19 @@ public class ChatActivity extends AppCompatActivity {
 
     private void setTypingIndecator(final Boolean typing) {
         FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone)
-                .child(FirebaseAuth.getInstance()
-                        .getCurrentUser().getPhoneNumber())
+                .child(userPhone)
                 .addListenerForSingleValueEvent(
                         new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 if (dataSnapshot.getValue() == null) {
-                                    FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
-                                            FirebaseAuth.getInstance()
-                                                    .getCurrentUser().getPhoneNumber()).child("typing").setValue(typing);
+                                    chatListRef.child(friendPhone).child(
+                                            userPhone).child("typing").setValue(typing);
                                 } else {
                                     HashMap<String, Object> hashMap = new HashMap<>();
                                     hashMap.put("typing", typing);
-                                    FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone).child(
-                                            FirebaseAuth.getInstance()
-                                                    .getCurrentUser().getPhoneNumber()).updateChildren(hashMap);
+                                    chatListRef.child(friendPhone).child(
+                                            userPhone).updateChildren(hashMap);
                                 }
                             }
 
@@ -705,7 +698,7 @@ public class ChatActivity extends AppCompatActivity {
 
     }
 
-    private void setSeenIndecator(final Boolean seen) {
+   /* private void setSeenIndecator(final Boolean seen) {
         FirebaseDatabase.getInstance().getReference().child("chatList").child(friendPhone)
                 .child(FirebaseAuth.getInstance()
                         .getCurrentUser().getPhoneNumber()).addListenerForSingleValueEvent(
@@ -731,7 +724,7 @@ public class ChatActivity extends AppCompatActivity {
                     }
                 }
         );
-    }
+    }*/
 
     private void ensureChatId() {
         FirebaseDatabase.getInstance().getReference().child("chatList").child(userPhone).child(friendPhone).child("id")
@@ -783,7 +776,6 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(View view) {
                    if(mMessageEditText.getText().toString().trim().equals(""))
                             return;
-                   Toast.makeText(getApplicationContext(),"Send nowwwww",Toast.LENGTH_SHORT).show();
                 SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                 Message message = new Message(mMessageEditText.getText().toString(),
                         Time.format(new Date()), null, 2, userPhone);
@@ -795,7 +787,6 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
     }
-
     private void attachChatMessagesListeners() {
         ChildEventListener chatListener = new ChildEventListener() {
             @RequiresApi(api = Build.VERSION_CODES.M)
