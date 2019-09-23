@@ -445,14 +445,14 @@ public class ChatActivity extends AppCompatActivity {
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        User user = dataSnapshot.getValue(User.class);
+                        User user = dataSnapshot.getValue(User.class);/*
                         if (user.getUserStatues().equals("online")) {
                             friendStatus.setVisibility(View.VISIBLE);
                             Online = true;
                         } else {
                             friendStatus.setVisibility(View.GONE);
                             Online = false;
-                        }
+                        }*/
                     }
 
                     @Override
