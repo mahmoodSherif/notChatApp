@@ -1,5 +1,6 @@
 package com.MM.notChatApp.activities;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,10 +26,17 @@ import com.MM.notChatApp.adapters.friendsAdapter;
 import com.MM.notChatApp.classes.Group;
 import com.MM.notChatApp.pass;
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -50,6 +58,7 @@ public class NewGroupActivity extends AppCompatActivity {
     String userPhone;
 
     DatabaseReference chatsRef , chatListRef , usersRef;
+    StorageReference  photosStorageReference;
 
     //dialog
      EditText groupNameET;
@@ -64,7 +73,7 @@ public class NewGroupActivity extends AppCompatActivity {
         chatListRef = FirebaseDatabase.getInstance().getReference().child("chatList");
         chatsRef = FirebaseDatabase.getInstance().getReference().child("chats");
         usersRef = FirebaseDatabase.getInstance().getReference().child("users");
-
+        photosStorageReference = FirebaseStorage.getInstance().getReference().child("chat_photos");
         userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
 
     }
@@ -80,9 +89,14 @@ public class NewGroupActivity extends AppCompatActivity {
         checkFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //createDialog();
+                if(selectedUsers.size()>0) {
+                    createDialog();
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),"select members",Toast.LENGTH_LONG).show();
+                }
 
-                /// start test
+             /*   /// start test
                 for(int pos : selectedUsers){
                     users.add(pass.list.get(pos).getPhone());
                 }
@@ -91,7 +105,7 @@ public class NewGroupActivity extends AppCompatActivity {
 
                 addNewGroup("new group baby", "uri" , users);
                 /// end test
-
+*/
                 Log.v("fab pressed" , "true");
             }
         });
@@ -127,7 +141,6 @@ public class NewGroupActivity extends AppCompatActivity {
         dialogBuilder.setView(dialogView);
          groupNameET =  dialogView.findViewById(R.id.groupNameET);
          groupImage = dialogView.findViewById(R.id.addGroupPhoto);
-        dialogBuilder.setTitle("new group");
         dialogBuilder.setMessage("Enter group info");
         groupImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -153,9 +166,40 @@ public class NewGroupActivity extends AppCompatActivity {
                    for(int pos : selectedUsers){
                        users.add(pass.list.get(pos).getPhone());
                    }
-                   // createGroup();
+                   saveImageToFb();
+                    addNewGroup(groupName,groupPhoto.toString(),users);
                    Intent intent = new Intent(NewGroupActivity.this,ChatActivity.class);
+                   startActivity(intent);
                }
+            }
+        });
+        AlertDialog dialog = dialogBuilder.create();
+        dialog.show();
+    }
+
+    private void saveImageToFb() {
+        final StorageReference photoRef = photosStorageReference
+                .child(groupPhoto.getLastPathSegment());
+        UploadTask task = photoRef.putFile(groupPhoto);
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(NewGroupActivity.this,"Failed",Toast.LENGTH_SHORT).show();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Toast.makeText(NewGroupActivity.this,"done",Toast.LENGTH_SHORT).show();
+            }
+        });
+        Task<Uri> uriTask =task.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                if(!task.isSuccessful())
+                {
+                    throw task.getException();
+                }
+                return photoRef.getDownloadUrl();
             }
         });
     }

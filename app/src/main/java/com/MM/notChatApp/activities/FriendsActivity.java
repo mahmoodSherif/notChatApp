@@ -113,14 +113,10 @@ public class FriendsActivity extends AppCompatActivity {
             }
         });
 
-            adapter = new friendsAdapter(this, R.layout.friends_list_item, users);
+           // adapter = new friendsAdapter(this, R.layout.friends_list_item, users);
             FriendsList.setAdapter(adapter);
-            //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            //   requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
-            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+
             getFromContacts();
-            // }
-            //Toast.makeText(getApplicationContext(),String.valueOf(numbers.size()),Toast.LENGTH_SHORT).show();
             for (String number : map.keySet()) {
                 if (checkIfNumVal(number)) {
                     Log.v("NEWEE", "new one ");
@@ -132,26 +128,7 @@ public class FriendsActivity extends AppCompatActivity {
                 counter++;
             }
             getBlocked();
-        adapter = new friendsAdapter(this, R.layout.friends_list_item, users);
-        FriendsList.setAdapter(adapter);
-        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-        //   requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
-        //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-        getFromContacts();
-        // }
-        //Toast.makeText(getApplicationContext(),String.valueOf(numbers.size()),Toast.LENGTH_SHORT).show();
-        for (String number : map.keySet()) {
-            if (checkIfNumVal(number)) {
-                Log.v("NEWEE", "new one ");
-                //   String num = numbers.get(i).replaceAll(" ","");
-                // read(num);
-            } else {
-                map.put(number, false);
-            }
-            counter++;
-        }
         read();
-
 
     }
     @Override
@@ -226,7 +203,6 @@ public class FriendsActivity extends AppCompatActivity {
                        }
                     }
 
-       // DatabaseReference curUserRef = firebaseDatabase.getReference().child("users").child(number);
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
 
@@ -252,15 +228,8 @@ public class FriendsActivity extends AppCompatActivity {
             String num = number.replaceAll(" ","");
             StringBuilder newString = new StringBuilder();
             if(num.charAt(0)!='+'&&num.charAt(1)!='2') {
-              /* for (int i = 0; i < num.length(); i++) {
-                    newString.append(num.charAt(i));
-                    if (i == 0) {
-                        newString.append("+2");
-                    }
-                }*/
               newString.append("+2");
               newString.append(num);
-               // Toast.makeText(getApplicationContext(),newString,Toast.LENGTH_LONG).show();
               map.put(newString.toString(),true);
             }
             else {
@@ -274,7 +243,7 @@ public class FriendsActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for(DataSnapshot user : dataSnapshot.getChildren()){
                     map.put(user.getKey() , false);
-                    read();
+                   // read();
                 }
             }
 

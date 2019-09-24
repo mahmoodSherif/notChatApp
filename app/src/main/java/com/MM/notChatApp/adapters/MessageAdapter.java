@@ -48,20 +48,21 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     private int lastPos = -1;
     private Runnable runnable;
     private SeekBar seekBar;
+    private Handler handler = new Handler();
 
     public MessageAdapter(Context context, int resource, List<Message> objects) {
         super(context, resource, objects);
         userList = objects;
         mSelectedItemsIds = new SparseBooleanArray();
     }
-    private Handler handler = new Handler(){
+  /*  private Handler handler = new Handler(){
         @Override
         public void handleMessage(@NonNull android.os.Message msg) {
             int cp = msg.what;
             seekBar.setProgress(cp);
 
         }
-    };
+    };*/
 
 
     @Override
@@ -321,14 +322,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                                     public void onPrepared(MediaPlayer mediaPlayer) {
                                         seekBar.setMax(player.getDuration());
                                         player.start();
-                                        /*updateseek();
-                                        handler = new Handler();/*
-                                        runnable = new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                updateseek();
-                                            }
-                                        };*/
+                                        updateseek();
+
                                     }
                                 });
                             }
@@ -363,15 +358,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                                 public void onPrepared(MediaPlayer mediaPlayer) {
                                     seekBar.setMax(player.getDuration());
                                     player.start();
-                                   /* updateseek();
-                                    handler = new Handler();/*
-                                    runnable = new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            updateseek();
+                                    updateseek();
 
-                                        }
-                                    };*/
                                 }
                             });
                         }
@@ -387,22 +375,6 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                              lastPos = position;
                     }
                 });
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        while (player!=null)
-                        {
-                            android.os.Message msg = new android.os.Message();
-                            msg.what = player.getCurrentPosition();
-                            handler.sendMessage(msg);
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }).start();
             }
             else {
                 docView.setVisibility(View.GONE);
@@ -429,7 +401,6 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         if(player!=null) {
             Toast.makeText(getContext(),String.valueOf(player.getCurrentPosition()),Toast.LENGTH_LONG).show();
             seekBar.setProgress(player.getCurrentPosition());
-            handler = new Handler();
             if(player.isPlaying())
             {
                 runnable = new Runnable() {
@@ -438,10 +409,12 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                      updateseek();
                     }
                 };
-                handler.postDelayed(runnable,1000);
+                handler.postDelayed(runnable,100);
+            }
+            else {
+                seekBar.setProgress(0);
             }
         }
-
     }
 
     @Override
