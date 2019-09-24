@@ -764,26 +764,28 @@ public class ChatActivity extends AppCompatActivity {
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message message = dataSnapshot.getValue(Message.class);
                 message.setId(dataSnapshot.getKey());
+                message.setHaveByMe(true);
+                if(dataSnapshot.child(chatId).getValue(Boolean.class)){
+                    message.setHaveByFriend(true);
+                }else{
+                    message.setHaveByFriend(false);
+                }
+                messageAdapter.add(message);
                 if(!message.getSentby().equals(userPhone) && (message.getStatues() != 3) ){
                     dataSnapshot.getRef().child("statues").setValue(3);
                 }
-                messageAdapter.add(message);
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                Message message = dataSnapshot.getValue(Message.class);
-                message.setId(dataSnapshot.getKey());
-                if (!message.isHaveByMe()) {
-                    deleteMessageFromChatList(message);
+                if (!dataSnapshot.child(userPhone).getValue(Boolean.class)) {
+                    deleteMessageFromChatList(dataSnapshot.getKey());
                 }
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-                Message message = dataSnapshot.getValue(Message.class);
-                message.setId(dataSnapshot.getKey());
-                deleteMessageFromChatList(message);
+                deleteMessageFromChatList(dataSnapshot.getKey());
             }
 
             @Override
@@ -798,9 +800,9 @@ public class ChatActivity extends AppCompatActivity {
         childEventListenerHashMap.put(curChatRef, chatListener);
     }
 
-    private void deleteMessageFromChatList(Message message) {
+    private void deleteMessageFromChatList(String id) {
         for (int i = 0; i < messages.size(); i++) {
-            if (message.getId().equals(messages.get(i).getId())) {
+            if (id.equals(messages.get(i).getId())) {
                 messages.remove(i);
                 break;
             }
@@ -944,4 +946,3 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 }
-

@@ -441,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
         isGroup.add(id);
         makeGroupNameListener(postion , id);
         makeLastMessageListener(postion , id);
-        //makeGroupPhotoListener(postion , id);
+        makeGroupPhotoListener(postion , id);
     }
 
 
@@ -468,6 +468,8 @@ public class MainActivity extends AppCompatActivity {
         ValueEventListener FriendPhotoListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.exists())
+                    return;
                 final String photoUrl = dataSnapshot.getValue(String.class);
                 User user = messagesListAdapter.getItem(postion);
                 user.setUserPhotoUrl(photoUrl);
