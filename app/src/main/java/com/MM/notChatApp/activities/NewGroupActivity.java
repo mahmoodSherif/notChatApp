@@ -102,6 +102,7 @@ public class NewGroupActivity extends AppCompatActivity {
                 }
                 if(!users.contains(userPhone))
                     users.add(userPhone);
+
                 addNewGroup("new group baby", "uri" , users);
                 /// end test
 */

@@ -30,7 +30,7 @@ public class Message {
     * 2 for riceve
     * 3 for read
     * */
-    private int statues;
+    private int statues = 0;
 
     public Message(String text, String time, String photoUrl, int statues , String user) {
         this.text = text;
