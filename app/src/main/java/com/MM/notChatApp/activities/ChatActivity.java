@@ -30,6 +30,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ActionMode;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -64,7 +65,6 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctions;
@@ -118,7 +118,7 @@ public class ChatActivity extends AppCompatActivity {
     // bar views
     private TextView BarfriendName;
     private CircleImageView BarFriendImage;
-    private TextView friendStatus;
+    private TextView typingFiled;
     private ImageButton backButton;
     private View audioView;
     private ImageButton play;
@@ -130,7 +130,7 @@ public class ChatActivity extends AppCompatActivity {
 
     // firebase
     private DatabaseReference curChatRef;
-
+    private DatabaseReference typingRef;
     // cur chat info
     String userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
     String chatId = null; // the phone for indv chat , the DB id for group chat
@@ -165,8 +165,7 @@ public class ChatActivity extends AppCompatActivity {
     // permissons
     boolean audioPremission, storagePremission;
 
-    // TODO : push the users phone in it on onCreate even if its indv chat
-    static ArrayList<String> usersList;
+    static ArrayList<String> usersList = new ArrayList<>();
     private boolean isIndvChat;
 
     @Override
@@ -174,29 +173,32 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        usersList = new ArrayList<>();
-
         readMessage = true;
-        // get data from calling activity
-        if (getIntent().getExtras() != null) {
-            friendName = getIntent().getExtras().getString("username");
-//            photo = Uri.parse(getIntent().getExtras().getString("userPhoto"));
-            chatId = getIntent().getExtras().getString("phone");
-            isIndvChat = !getIntent().getExtras().getBoolean("isGroup");
-            Log.v("he5a :: ", String.valueOf(isIndvChat));
-        }
-
-        if(isIndvChat){
-            usersList.add(userPhone);
-            usersList.add(chatId);
-        }
+        getDataFormCalling();
         askForPermissions();
         initUI();
-
+        setTypingIndecator();
+        checkStatus();
+        typingRef = pass.chatListRef.child(userPhone).child(chatId).child("typing");
         // init the record file
         fileName = Environment.getExternalStorageDirectory().getAbsolutePath();
         fileName += "/audiorecord.mp3";
 
+    }
+
+    private void getDataFormCalling() {
+        if (getIntent().getExtras() != null) {
+            friendName = getIntent().getExtras().getString("username");
+            // TODO :: get the photo
+            // photo = Uri.parse(getIntent().getExtras().getString("userPhoto"));
+            chatId = getIntent().getExtras().getString("phone");
+            isIndvChat = !getIntent().getExtras().getBoolean("isGroup");
+            Log.v("he5a :: ", String.valueOf(isIndvChat));
+        }
+        if(isIndvChat){
+            usersList.add(userPhone);
+            usersList.add(chatId);
+        }
     }
 
     private void startRecord() {
@@ -257,7 +259,6 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-
     private void askForPermissions() {
         //camera permission
         CameraPermission = new String[]{Manifest.permission.CAMERA,
@@ -281,7 +282,7 @@ public class ChatActivity extends AppCompatActivity {
         // bar views
         BarfriendName = view.findViewById(R.id.BarfriendName);
         BarFriendImage = view.findViewById(R.id.BarFriendImage);
-        friendStatus = view.findViewById(R.id.BarFriendLastSeen);
+        typingFiled = view.findViewById(R.id.BarFriendLastSeen);
         backButton = view.findViewById(R.id.backButton);
 
         //popup menu views
@@ -346,7 +347,6 @@ public class ChatActivity extends AppCompatActivity {
                 .into(BarFriendImage);
         //checkStatus();
         //showTyping();
-        setSeenIndecator(true);
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -364,8 +364,10 @@ public class ChatActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.toString().trim().length() > 0) {
                     mSendButton.setImageResource(R.drawable.bluesend);
+                    typingRef.setValue(true);
                 } else {
                     mSendButton.setImageResource(R.drawable.microphone);
+                    typingRef.setValue(false);
                 }
             }
 
@@ -382,6 +384,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
+
 
         mSendButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -418,7 +421,6 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        setSeenIndecator(true);
         readMessage = true;
         ensureChatIdIndvChat();
     }
@@ -426,8 +428,8 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        typingRef.setValue(false);
         messageAdapter.clear();
-        setSeenIndecator(false);
         readMessage = false;
         for (Map.Entry<DatabaseReference, ChildEventListener> entry : childEventListenerHashMap.entrySet()) {
             DatabaseReference ref = entry.getKey();
@@ -442,48 +444,16 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void checkStatus() {
-        pass.userRef.child(chatId).addListenerForSingleValueEvent(
+        pass.userRef.child(chatId).child("UserStatues").addValueEventListener(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        User user = dataSnapshot.getValue(User.class);
-                        if (user.getUserStatues().equals("online")) {
-                            friendStatus.setVisibility(View.VISIBLE);
+                        if (dataSnapshot.getValue(String.class).equals("online")) {
                             Online = true;
                         } else {
-                            friendStatus.setVisibility(View.GONE);
                             Online = false;
                         }
                     }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                }
-        );
-    }
-
-    private void showTyping() {
-        pass.chatListRef.child(
-                FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
-        ).child(chatId).child("typing").addListenerForSingleValueEvent(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.getValue() != null) {
-                            if (dataSnapshot.getValue().equals(true)) {
-                                Toast.makeText(getApplicationContext(), "hola", Toast.LENGTH_SHORT).show();
-                                friendStatus.setVisibility(View.VISIBLE);
-                                friendStatus.setText(R.string.typing);
-                            } else {
-                                if (Online) {
-                                    friendStatus.setText("Online");
-                                }
-                            }
-                        }
-                    }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
 
@@ -687,24 +657,25 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-    private void setTypingIndecator(final Boolean typing) {
+    private void setTypingIndecator() {
         pass.chatListRef.child(chatId)
-                .child(FirebaseAuth.getInstance()
-                        .getCurrentUser().getPhoneNumber())
-                .addListenerForSingleValueEvent(
+                .child(userPhone)
+                .child("typing")
+                .addValueEventListener(
                         new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 if (dataSnapshot.getValue() == null) {
-                                    pass.chatListRef.child(chatId).child(
-                                            FirebaseAuth.getInstance()
-                                                    .getCurrentUser().getPhoneNumber()).child("typing").setValue(typing);
-                                } else {
-                                    HashMap<String, Object> hashMap = new HashMap<>();
-                                    hashMap.put("typing", typing);
-                                    pass.chatListRef.child(chatId).child(
-                                            FirebaseAuth.getInstance()
-                                                    .getCurrentUser().getPhoneNumber()).updateChildren(hashMap);
+                                    dataSnapshot.getRef().setValue(false);
+                                }
+                                if(dataSnapshot.getValue(Boolean.class)){
+                                    typingFiled.setText("typing...");
+                                }else{
+                                    if(Online){
+                                        typingFiled.setText("Online");
+                                    }else{
+                                        typingFiled.setText("last seen");
+                                    }
                                 }
                             }
 
@@ -715,34 +686,6 @@ public class ChatActivity extends AppCompatActivity {
                         }
                 );
 
-    }
-
-    private void setSeenIndecator(final Boolean seen) {
-        pass.chatListRef.child(chatId)
-                .child(FirebaseAuth.getInstance()
-                        .getCurrentUser().getPhoneNumber()).addListenerForSingleValueEvent(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.getValue() == null) {
-                            pass.chatListRef.child(chatId).child(
-                                    FirebaseAuth.getInstance()
-                                            .getCurrentUser().getPhoneNumber()).child("seen").setValue(seen);
-                        } else {
-                            HashMap<String, Object> hashMap = new HashMap<>();
-                            hashMap.put("seen", seen);
-                            pass.chatListRef.child(chatId).child(
-                                    FirebaseAuth.getInstance()
-                                            .getCurrentUser().getPhoneNumber()).updateChildren(hashMap);
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                }
-        );
     }
 
     private void ensureChatIdIndvChat() {
@@ -776,10 +719,6 @@ public class ChatActivity extends AppCompatActivity {
 
                     }
                 });
-    }
-
-    private void ensureChatIdGroupChat(){
-
     }
 
     public static Task<HttpsCallableResult> notify(Message message, String to) {
@@ -825,7 +764,9 @@ public class ChatActivity extends AppCompatActivity {
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message message = dataSnapshot.getValue(Message.class);
                 message.setId(dataSnapshot.getKey());
-                Log.v("new message :: ", message.getText());
+                if(!message.getSentby().equals(userPhone) && (message.getStatues() != 3) ){
+                    dataSnapshot.getRef().child("statues").setValue(3);
+                }
                 messageAdapter.add(message);
             }
 
