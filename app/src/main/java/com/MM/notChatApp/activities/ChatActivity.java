@@ -168,6 +168,8 @@ public class ChatActivity extends AppCompatActivity {
     static ArrayList<String> usersList = new ArrayList<>();
     private boolean isIndvChat;
 
+    private HashMap<String , Integer> pos = new HashMap<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -177,9 +179,11 @@ public class ChatActivity extends AppCompatActivity {
         getDataFormCalling();
         askForPermissions();
         initUI();
-        setTypingIndecator();
-        checkStatus();
-        typingRef = pass.chatListRef.child(userPhone).child(chatId).child("typing");
+        if(isIndvChat) {
+            setTypingIndecator();
+            checkStatus();
+            typingRef = pass.chatListRef.child(userPhone).child(chatId).child("typing");
+        }
         // init the record file
         fileName = Environment.getExternalStorageDirectory().getAbsolutePath();
         fileName += "/audiorecord.mp3";
@@ -189,8 +193,7 @@ public class ChatActivity extends AppCompatActivity {
     private void getDataFormCalling() {
         if (getIntent().getExtras() != null) {
             friendName = getIntent().getExtras().getString("username");
-            // TODO :: get the photo
-            // photo = Uri.parse(getIntent().getExtras().getString("userPhoto"));
+            photo = Uri.parse(getIntent().getExtras().getString("userPhoto"));
             chatId = getIntent().getExtras().getString("phone");
             isIndvChat = !getIntent().getExtras().getBoolean("isGroup");
             Log.v("he5a :: ", String.valueOf(isIndvChat));
@@ -667,6 +670,12 @@ public class ChatActivity extends AppCompatActivity {
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 if (dataSnapshot.getValue() == null) {
                                     dataSnapshot.getRef().setValue(false);
+                                    if(Online){
+                                        typingFiled.setText("Online");
+                                    }else{
+                                        typingFiled.setText("last seen");
+                                    }
+                                    return;
                                 }
                                 if(dataSnapshot.getValue(Boolean.class)){
                                     typingFiled.setText("typing...");
@@ -770,6 +779,7 @@ public class ChatActivity extends AppCompatActivity {
                 }else{
                     message.setHaveByFriend(false);
                 }
+                pos.put(message.getId() , messages.size());
                 messageAdapter.add(message);
                 if(!message.getSentby().equals(userPhone) && (message.getStatues() != 3) ){
                     dataSnapshot.getRef().child("statues").setValue(3);
@@ -778,6 +788,11 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Message message = dataSnapshot.getValue(Message.class);
+                message.setId(dataSnapshot.getKey());
+                messages.set(pos.get(dataSnapshot.getKey()) , message);
+                messageAdapter.notifyDataSetChanged();
+
                 if (!dataSnapshot.child(userPhone).getValue(Boolean.class)) {
                     deleteMessageFromChatList(dataSnapshot.getKey());
                 }
@@ -806,6 +821,9 @@ public class ChatActivity extends AppCompatActivity {
                 messages.remove(i);
                 break;
             }
+        }
+        for(int i = 0;i<messages.size();i++){
+            pos.put(messages.get(i).getId() , i);
         }
         messageAdapter.notifyDataSetChanged();
     }

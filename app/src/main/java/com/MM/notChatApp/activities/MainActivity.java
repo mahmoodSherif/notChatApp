@@ -119,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("userPhoto", user.getUserPhotoUrl());
                 Log.v("the id of cliecked ::: " ,user.getPhone() );
                 intent.putExtra("isGroup",isGroup.contains(user.getPhone()));
+                Log.wtf("is group" , String.valueOf(isGroup.contains(user.getPhone())));
                 startActivity(intent);
             }
         });
@@ -148,8 +149,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
     }
-
-
 
     @Override
     protected void onResume() {
@@ -284,8 +283,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    // create helper
     private void setUpSwipeMenuCreator(){
         creator = new SwipeMenuCreator() {
 
@@ -410,6 +407,8 @@ public class MainActivity extends AppCompatActivity {
         ValueEventListener FriendNameListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.exists())
+                    return;
                 final String name = dataSnapshot.getValue(String.class);
                 User user = messagesListAdapter.getItem(postion);
                 user.setUserName(name);
@@ -418,7 +417,7 @@ public class MainActivity extends AppCompatActivity {
             }
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         };
-        DatabaseReference ref = usersRef.child(friendPhone).child("userName");
+        DatabaseReference ref = usersRef.child(friendPhone).child(DBvars.USER.userName);
         ref.addValueEventListener(FriendNameListener);
         valueEventListenerHashMap.put(ref , FriendNameListener);
     }
@@ -427,6 +426,8 @@ public class MainActivity extends AppCompatActivity {
         ValueEventListener FriendPhotoListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.exists())
+                    return;
                 final String photoUrl = dataSnapshot.getValue(String.class);
                 User user = messagesListAdapter.getItem(postion);
                 user.setUserPhotoUrl(photoUrl);
@@ -439,11 +440,13 @@ public class MainActivity extends AppCompatActivity {
         ref.addValueEventListener(FriendPhotoListener);
         valueEventListenerHashMap.put(ref , FriendPhotoListener);
     }
-    private void makeFriendBioListener(final int position,final String friendPhone)
-    {
+
+    private void makeFriendBioListener(final int position,final String friendPhone) {
         ValueEventListener FriendPhotoListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.exists())
+                    return;
                 final String photoUrl = dataSnapshot.getValue(String.class);
                 User user = messagesListAdapter.getItem(position);
                 user.setUserBio(photoUrl);
@@ -457,7 +460,6 @@ public class MainActivity extends AppCompatActivity {
         valueEventListenerHashMap.put(ref , FriendPhotoListener);
     }
 
-
     private void makeGroupListeners(final int postion , String id ){
         isGroup.add(id);
         makeGroupNameListener(postion , id);
@@ -465,12 +467,13 @@ public class MainActivity extends AppCompatActivity {
         makeGroupPhotoListener(postion , id);
     }
 
-
     private void makeGroupNameListener(final int postion , final String id){
 
         ValueEventListener FriendNameListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.exists())
+                    return;
                 final String name = dataSnapshot.getValue(String.class);
                 User user = messagesListAdapter.getItem(postion);
                 user.setUserName(name);
@@ -503,8 +506,6 @@ public class MainActivity extends AppCompatActivity {
         ref.addValueEventListener(FriendPhotoListener);
         valueEventListenerHashMap.put(ref , FriendPhotoListener);
     }
-
-
 
     // chat messages
     private void getChatList(){

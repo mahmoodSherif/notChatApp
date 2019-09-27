@@ -15,5 +15,16 @@ public interface DBvars {
         String id = "id";
         String isGroup = "isGroup";
     }
+    interface MESSAGE{
+        String id = "id";
+        String text = "text" ;
+        String time = "time";
+        String photoUrl = "photoUrl" ;
+        String audioUrl = "audioUrl" ;
+        String docUrl = "docUrl";
+        String sentby = "sentby";
+        String  statues = "statues";
+    }
+    String typring = "typring";
 
 }
