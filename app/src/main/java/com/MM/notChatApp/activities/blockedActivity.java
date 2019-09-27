@@ -42,6 +42,7 @@ public class blockedActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_blocked);
         blockedList = findViewById(R.id.blockedList);
+        blockedList.setEmptyView(findViewById(R.id.layoutEmpty));
         if(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()!=null) {
             myPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
         }
@@ -73,7 +74,7 @@ public class blockedActivity extends AppCompatActivity {
                 // set item title fontsize
                 openItem.setTitleSize(18);
                 // set item title font color
-                openItem.setTitleColor(Color.WHITE);
+                openItem.setTitleColor(R.color.colorAccent);
                 // add to menu
                 menu.addMenuItem(openItem);
 

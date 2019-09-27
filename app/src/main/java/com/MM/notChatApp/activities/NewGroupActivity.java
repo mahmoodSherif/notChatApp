@@ -27,6 +27,7 @@ import com.MM.notChatApp.classes.Group;
 import com.MM.notChatApp.pass;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -167,7 +168,6 @@ public class NewGroupActivity extends AppCompatActivity {
                        users.add(pass.list.get(pos).getPhone());
                    }
                    saveImageToFb();
-                    addNewGroup(groupName,groupPhoto.toString(),users);
                    Intent intent = new Intent(NewGroupActivity.this,ChatActivity.class);
                    startActivity(intent);
                }
@@ -200,6 +200,15 @@ public class NewGroupActivity extends AppCompatActivity {
                     throw task.getException();
                 }
                 return photoRef.getDownloadUrl();
+            }
+        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if(task.isSuccessful())
+                {
+                    Uri downloadedUri = task.getResult();
+                    addNewGroup(groupName,downloadedUri.toString(),users);
+                }
             }
         });
     }

@@ -10,7 +10,7 @@
         />
     <item
         android:id="@+id/DeleteMessageForAll"
-        android:icon="@drawable/delete_icon"
+        android:icon="@drawable/deleteforall_icon"
         android:title="delete for all"
         app:showAsAction="never" />
     <item

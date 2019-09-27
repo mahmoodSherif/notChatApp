@@ -65,6 +65,7 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctions;
@@ -172,7 +173,6 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
-
         readMessage = true;
         getDataFormCalling();
         askForPermissions();
@@ -326,7 +326,7 @@ public class ChatActivity extends AppCompatActivity {
                         view.setBackgroundColor(Color.parseColor("#4C525A"));
                     }
                 }
-                view.setBackgroundColor(Color.parseColor("#242424"));
+                //view.setBackgroundColor(Color.parseColor("#242424"));
             }
         });
 

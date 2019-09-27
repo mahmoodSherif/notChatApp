@@ -17,9 +17,9 @@
     <application
         android:name=".notChatApp"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/notchatappicon"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/notchatappicon_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".activities.blockedActivity"></activity>

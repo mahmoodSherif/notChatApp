@@ -93,13 +93,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        try {
+
+            FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        }
+        catch (Exception e)
+        {
+
+        }
 
         // database ref set
         firebaseDatabase = FirebaseDatabase.getInstance();
         chatListRef = firebaseDatabase.getReference().child("chatList");
         usersRef = firebaseDatabase.getReference().child("users");
         chatRef = firebaseDatabase.getReference().child("chats");
-
         MainListView = findViewById(R.id.listView);
         FloatingActionButton fab = findViewById(R.id.fab);
 
@@ -304,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
                 // set item title fontsize
                 openItem.setTitleSize(18);
                 // set item title font color
-                openItem.setTitleColor(Color.WHITE);
+                openItem.setTitleColor(R.color.colorAccent);
                 // add to menu
                 menu.addMenuItem(openItem);
 
@@ -316,6 +323,7 @@ public class MainActivity extends AppCompatActivity {
                         0x3F, 0x25)));
                 // set item width
                 deleteItem.setWidth(170);
+                deleteItem.setBackground(R.color.colorAccent);
                 // set a icon
                 deleteItem.setIcon(R.drawable.delete_icon);
                 // add to menu
