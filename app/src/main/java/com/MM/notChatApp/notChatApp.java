@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class notChatApp extends Application implements Application.ActivityLifecycleCallbacks {
+
     private static void  status(String status) {
         HashMap<String,Object> hashMap = new HashMap<>();
         hashMap.put("UserStatues",status);

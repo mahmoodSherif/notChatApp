@@ -367,10 +367,12 @@ public class ChatActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.toString().trim().length() > 0) {
                     mSendButton.setImageResource(R.drawable.bluesend);
-                    typingRef.setValue(true);
+                    if(isIndvChat)
+                        typingRef.setValue(true);
                 } else {
                     mSendButton.setImageResource(R.drawable.microphone);
-                    typingRef.setValue(false);
+                    if(isIndvChat)
+                        typingRef.setValue(false);
                 }
             }
 
@@ -772,13 +774,9 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message message = dataSnapshot.getValue(Message.class);
+                Log.v("new message added", message.toString());
                 message.setId(dataSnapshot.getKey());
                 message.setHaveByMe(true);
-                if(dataSnapshot.child(chatId).getValue(Boolean.class)){
-                    message.setHaveByFriend(true);
-                }else{
-                    message.setHaveByFriend(false);
-                }
                 pos.put(message.getId() , messages.size());
                 messageAdapter.add(message);
                 if(!message.getSentby().equals(userPhone) && (message.getStatues() != 3) ){

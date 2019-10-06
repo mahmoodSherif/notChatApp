@@ -97,16 +97,6 @@ public class NewGroupActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(),"select members",Toast.LENGTH_LONG).show();
                 }
 
-             /*   /// start test
-                for(int pos : selectedUsers){
-                    users.add(pass.list.get(pos).getPhone());
-                }
-                if(!users.contains(userPhone))
-                    users.add(userPhone);
-
-                addNewGroup("new group baby", "uri" , users);
-                /// end test
-*/
                 Log.v("fab pressed" , "true");
             }
         });
@@ -124,16 +114,7 @@ public class NewGroupActivity extends AppCompatActivity {
 
             }
         });
-    }/*
-    private void createGroup(){
-        users.add(userPhone);
-        final Group group = new Group(null,"name test","photo test",users);
-        DatabaseReference groupRef = chatsRef.push();
-        final String id = groupRef.getKey();
-        for(String cur : users){
-            chatListRef.child(cur).child(id).setValue(group);
-        }
-    }*/
+    }
     private void createDialog()
     {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
@@ -158,7 +139,7 @@ public class NewGroupActivity extends AppCompatActivity {
         });
         dialogBuilder.setPositiveButton("Done", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-               if(groupNameET.getText().toString().length()==0)
+               if(groupNameET.getText().toString().isEmpty())
                {
                    Toast.makeText(getApplicationContext(),"set group name",Toast.LENGTH_LONG).show();
                }
@@ -168,8 +149,6 @@ public class NewGroupActivity extends AppCompatActivity {
                        users.add(pass.list.get(pos).getPhone());
                    }
                    saveImageToFb();
-                   Intent intent = new Intent(NewGroupActivity.this,ChatActivity.class);
-                   startActivity(intent);
                }
             }
         });
@@ -208,6 +187,10 @@ public class NewGroupActivity extends AppCompatActivity {
                 {
                     Uri downloadedUri = task.getResult();
                     addNewGroup(groupName,downloadedUri.toString(),users);
+                    Intent intent = new Intent(NewGroupActivity.this,ChatActivity.class);
+                    startActivity(intent);
+                }else{
+                    Toast.makeText(NewGroupActivity.this,"faild to make group",Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -228,10 +211,10 @@ public class NewGroupActivity extends AppCompatActivity {
         String DBGroupid = pass.groupRef.push().getKey();
         String DBGroupChatid = pass.chatRef.push().getKey();
 
+        members.add(userPhone);
         Group newGroup = new Group(DBGroupid , groupName , uri , members);
         pass.groupRef.child(DBGroupid).setValue(newGroup);
 
-        members.add(userPhone);
         for(String cur : members){
             pass.chatListRef.child(cur).child(DBGroupid).child(DBvars.GROUP.isGroup).setValue(true);
             pass.chatListRef.child(cur).child(DBGroupid).child(DBvars.GROUP.id).setValue(DBGroupChatid);

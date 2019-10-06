@@ -93,14 +93,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        try {
-
-            FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-        }
-        catch (Exception e)
-        {
-
-        }
+//        try {
+//
+//            FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+//        }
+//        catch (Exception e)
+//        {
+//
+//        }
 
         // database ref set
         firebaseDatabase = FirebaseDatabase.getInstance();
@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                     getChatList();
                 } else {
                     signIn();
-                };
+                }
                 FirebaseMessaging.getInstance().subscribeToTopic("user_"+pass.userPhone.substring(1));
             }
         };
@@ -283,7 +283,6 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(MainActivity.this, "NOT first Time", Toast.LENGTH_LONG).show();
                 }
-
             } else {
                 finish();
             }
