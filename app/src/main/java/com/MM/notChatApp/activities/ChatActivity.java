@@ -121,8 +121,6 @@ public class ChatActivity extends AppCompatActivity {
     private CircleImageView BarFriendImage;
     private TextView typingFiled;
     private ImageButton backButton;
-    private View audioView;
-    private ImageButton play;
 
     //popup menu views
     private ImageView galaryImage;
@@ -304,8 +302,14 @@ public class ChatActivity extends AppCompatActivity {
 
         //audioView = findViewById(R.id.audioInclue);
         //play = findViewById(R.id.btnPlay);
-        messageAdapter = new MessageAdapter(ChatActivity.this, R.layout.message_item_res, messages);
-        messagesListView.setAdapter(messageAdapter);
+        if(isIndvChat) {
+            messageAdapter = new MessageAdapter(ChatActivity.this, R.layout.message_item_res, messages);
+            messagesListView.setAdapter(messageAdapter);
+        }
+        else {
+            messageAdapter = new MessageAdapter(ChatActivity.this, R.layout.message_item_res, messages,true);
+            messagesListView.setAdapter(messageAdapter);
+        }
 
         mPhotoPickerButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -433,7 +437,9 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        typingRef.setValue(false);
+        if(isIndvChat) {
+            typingRef.setValue(false);
+        }
         messageAdapter.clear();
         readMessage = false;
         for (Map.Entry<DatabaseReference, ChildEventListener> entry : childEventListenerHashMap.entrySet()) {

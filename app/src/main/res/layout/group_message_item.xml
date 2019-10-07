@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:id="@+id/groupLay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/messages_left"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/Group_imageRes"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:adjustViewBounds="true"
+            android:visibility="gone" />
+        <include
+            android:id="@+id/Group_resAudioInclue"
+            android:visibility="gone"
+            layout="@layout/audio_layout"
+            />
+        <include
+            android:id="@+id/Group_resDocLayout"
+            android:visibility="gone"
+            layout="@layout/doc_layout"
+            />
+        <TextView
+            android:id="@+id/Group_FriendName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="300dp"
+            android:text="Name"
+            android:textColor="@color/colorAccent"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/Group_MessageRes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="300dp"
+            android:text="Message"
+            android:textColor=" #ffffff"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/Group_MessageTimeRes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="3:00 pm"
+            android:textSize="10dp" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/Group_resCardView"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:cardUseCompatPadding="true">
+
+            <TextView
+                android:id="@+id/Group_resDoctxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="doc" />
+
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+</LinearLayout>
