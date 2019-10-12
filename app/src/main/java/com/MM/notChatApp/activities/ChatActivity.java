@@ -185,7 +185,6 @@ public class ChatActivity extends AppCompatActivity {
         // init the record file
         fileName = Environment.getExternalStorageDirectory().getAbsolutePath();
         fileName += "/audiorecord.mp3";
-
     }
 
     private void getDataFormCalling() {
@@ -667,7 +666,6 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-
     private void setTypingIndecator() {
         pass.chatListRef.child(chatId)
                 .child(userPhone)
@@ -761,6 +759,7 @@ public class ChatActivity extends AppCompatActivity {
                 mMessageEditText.setText("");
             }
         });
+
     }
 
     private void sendMessage(String text){
@@ -832,7 +831,7 @@ public class ChatActivity extends AppCompatActivity {
         messageAdapter.notifyDataSetChanged();
     }
 
-    private void deleteMessageForAll(Message message) {
+    private void deleteMessageForAll(Message message){
         curChatRef.child(message.getId()).setValue(null);
     }
 

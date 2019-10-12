@@ -6,9 +6,11 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,7 +43,9 @@ import com.google.firebase.storage.UploadTask;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -89,8 +93,13 @@ public class ImageSendActivity extends AppCompatActivity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               if(selectedImageUri.getLastPathSegment()!=null&&userPhone!=null&&friendPhone!=null)
-                    send();
+               if(selectedImageUri.getLastPathSegment()!=null&&userPhone!=null&&friendPhone!=null) {
+                   try {
+                       send();
+                   } catch (IOException e) {
+                       e.printStackTrace();
+                   }
+               }
                 else {
                     Toast.makeText(getApplicationContext(),userPhone+" "+friendPhone,Toast.LENGTH_LONG).show();
                 }
@@ -98,15 +107,20 @@ public class ImageSendActivity extends AppCompatActivity {
         });
 
     }
-    private void send()
-    {
+    private void send() throws IOException {
 
         final StorageReference photoRef = photosStorageReference
                 .child(selectedImageUri.getLastPathSegment());
 
         chatRef.child(userPhone).child(friendPhone).push().setValue(selectedImageUri.toString());
         chatRef.child(friendPhone).child(userPhone).push().setValue(selectedImageUri.toString());
-        UploadTask task = photoRef.putFile(selectedImageUri);
+
+        Bitmap bmp = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.JPEG, 25, baos);
+        byte[] data = baos.toByteArray();
+        //uploading the image
+        UploadTask task = photoRef.putBytes(data);
         task.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {

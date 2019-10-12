@@ -370,12 +370,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void makeFriendListeners(final int postion , final String friendPhone){
         makeFriendNameListener(postion, friendPhone);
-        makeLastMessageListener(postion, friendPhone);
+        makeLastMessageListener(postion, friendPhone, false);
         makeFriendPhotoListener(postion, friendPhone);
         makeFriendBioListener(postion,friendPhone);
     }
 
-    private void makeLastMessageListener(final int postion , final String friendPhone){
+    private void makeLastMessageListener(final int postion , final String friendPhone , final boolean isGroup){
         final ValueEventListener lastMessageListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -470,7 +470,7 @@ public class MainActivity extends AppCompatActivity {
     private void makeGroupListeners(final int postion , String id ){
         isGroup.add(id);
         makeGroupNameListener(postion , id);
-        makeLastMessageListener(postion , id);
+        makeLastMessageListener(postion , id, true);
         makeGroupPhotoListener(postion , id);
     }
 
@@ -514,25 +514,46 @@ public class MainActivity extends AppCompatActivity {
         valueEventListenerHashMap.put(ref , FriendPhotoListener);
     }
 
+    private void checkForMessages(final DataSnapshot _dataSnapshot){
+        if(_dataSnapshot.child(DBvars.GROUP.isGroup).exists()){
+            addMessageToAdapter(_dataSnapshot);
+            return;
+        }
+        String id = _dataSnapshot.child("id").getValue(String.class);
+        pass.chatRef.child(id).orderByChild(pass.userPhone).equalTo(true).limitToFirst(1).addValueEventListener(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.exists()){
+                            addMessageToAdapter(_dataSnapshot);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {}
+                }
+        );
+    }
+    private void addMessageToAdapter(DataSnapshot dataSnapshot){
+        if(dataSnapshot.child(DBvars.GROUP.isGroup).exists()){
+            final String id = dataSnapshot.getKey();
+            messagesListAdapter.add(new User(id));
+            chatIdMap.put(id, id);
+            isGroup.add(id);
+            makeGroupListeners(usersList.size()-1 , id);
+        }else {
+            final String friendPhone = dataSnapshot.getKey();
+            final String chatId = dataSnapshot.child("id").getValue(String.class);
+            messagesListAdapter.add(new User(friendPhone));
+            chatIdMap.put(friendPhone, chatId);
+            makeFriendListeners(usersList.size() - 1, friendPhone);
+        }
+    }
     // chat messages
     private void getChatList(){
         ChildEventListener chatsListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                if(dataSnapshot.child(DBvars.GROUP.isGroup).exists()){
-                    final String id = dataSnapshot.getKey();
-                    messagesListAdapter.add(new User(id));
-                    chatIdMap.put(id, id);
-                    isGroup.add(id);
-                    makeGroupListeners(usersList.size()-1 , id);
-                }else {
-                    final String friendPhone = dataSnapshot.getKey();
-                    final String chatId = dataSnapshot.child("id").getValue(String.class);
-                    messagesListAdapter.add(new User(friendPhone));
-                    chatIdMap.put(friendPhone, chatId);
-                    makeFriendListeners(usersList.size() - 1, friendPhone);
-                }
-
+                checkForMessages(dataSnapshot);
             }
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
@@ -547,31 +568,21 @@ public class MainActivity extends AppCompatActivity {
     private void deleteChat(final int postion){
         final User curChatFriend = messagesListAdapter.getItem(postion);
         final String curPhone = curChatFriend.getPhone();
-        final DatabaseReference ref = chatListRef.child(pass.userPhone).child(curPhone);
-        ref.child("have messages").setValue(false);
-
         final DatabaseReference refForChat = firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone));
 
-        firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone)).addListenerForSingleValueEvent(new ValueEventListener() {
+        refForChat.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Iterable<DataSnapshot> children = dataSnapshot.getChildren();
-                for(DataSnapshot x : children){
-                    if(x.child("have").getValue(String.class).equals("both")){
-                        x.getRef().child("have").setValue(curPhone);
-                    }else{
-                        x.getRef().removeValue();
-                    }
+                for(DataSnapshot curMessage : dataSnapshot.getChildren()){
+                        curMessage.child(pass.userPhone).getRef().setValue(false);
                 }
                 usersList.remove(postion);
                 messagesListAdapter.notifyDataSetChanged();
             }
-
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
+
     }
 
 
