@@ -86,9 +86,7 @@ public class MainActivity extends AppCompatActivity {
     private HashSet<String> isGroup = new HashSet<>();
 
     // user info
-
-
-
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

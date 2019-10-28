@@ -67,6 +67,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.functions.HttpsCallableResult;
@@ -143,6 +144,7 @@ public class ChatActivity extends AppCompatActivity {
     // maps
     private HashMap<DatabaseReference, ValueEventListener> valueEventListenerHashMap = new HashMap<>();
     private HashMap<DatabaseReference, ChildEventListener> childEventListenerHashMap = new HashMap<>();
+    private HashMap<Query, ChildEventListener> QueryHashMap = new HashMap<>();
     private HashMap<Integer, Boolean> selected = new HashMap<>();
 
     //action mode Represents a contextual mode of the user interface
@@ -168,6 +170,7 @@ public class ChatActivity extends AppCompatActivity {
     private boolean isIndvChat;
 
     private HashMap<String , Integer> pos = new HashMap<>();
+    private boolean have = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -244,7 +247,9 @@ public class ChatActivity extends AppCompatActivity {
                         final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                         final Message message = new Message(
                                 Time.format(new Date()), uri.toString(), 2, userPhone);
+                        message.setText("🎤 voice message(0:00)");
                         ChatActivity.this.notify(message, chatId);
+                        message.setText("");
                         Map<String, Object> rr = message.toMap(usersList);
                         curChatRef.push().updateChildren(rr);
 
@@ -460,6 +465,12 @@ public class ChatActivity extends AppCompatActivity {
             ValueEventListener listener = entry.getValue();
             ref.removeEventListener(listener);
         }
+        for (Map.Entry<Query, ChildEventListener> entry : QueryHashMap.entrySet()) {
+            Query ref = entry.getKey();
+            ChildEventListener listener = entry.getValue();
+            ref.removeEventListener(listener);
+        }
+        have = false;
     }
 
     private void checkStatus() {
@@ -713,7 +724,7 @@ public class ChatActivity extends AppCompatActivity {
 
     }
 
-    private void ensureChatIdIndvChat() {
+    private void ensureChatIdIndvChat(){
         pass.chatListRef.child(userPhone).child(chatId).child("id")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -736,7 +747,7 @@ public class ChatActivity extends AppCompatActivity {
                         }else{
                             getChatMembers();
                         }
-                            attachChatMessagesListeners();
+                        attachChatMessagesListeners();
                     }
 
                     @Override
@@ -789,7 +800,7 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message message = dataSnapshot.getValue(Message.class);
-                Log.v("new message added", message.toString());
+                Log.v("message", "added");
                 message.setId(dataSnapshot.getKey());
                 message.setHaveByMe(true);
                 pos.put(message.getId() , messages.size());
@@ -803,6 +814,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message message = dataSnapshot.getValue(Message.class);
                 message.setId(dataSnapshot.getKey());
+                Log.v("message", "update");
                 messages.set(pos.get(dataSnapshot.getKey()) , message);
                 messageAdapter.notifyDataSetChanged();
 
@@ -824,8 +836,11 @@ public class ChatActivity extends AppCompatActivity {
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
         };
-        curChatRef.orderByChild(userPhone).equalTo(true).addChildEventListener(chatListener);
-        childEventListenerHashMap.put(curChatRef, chatListener);
+        Query ref = curChatRef.orderByChild(userPhone).equalTo(true);
+        if(!have)
+            ref.addChildEventListener(chatListener);
+        have = true;
+        QueryHashMap.put(ref, chatListener);
     }
 
     private void deleteMessageFromChatList(String id) {
@@ -900,7 +915,9 @@ public class ChatActivity extends AppCompatActivity {
                     final Message message = new Message(2
                             , Time.format(new Date()), downloadedUri.toString(), userPhone);
 
+                    message.setText("📃 Document");
                     ChatActivity.notify(message, chatId);
+                    message.setText("");
                     Map<String, Object> rr = message.toMap(usersList);
                     curChatRef.push().updateChildren(rr);
                 }
