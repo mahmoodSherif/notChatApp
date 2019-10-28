@@ -126,7 +126,6 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("userPhoto", user.getUserPhotoUrl());
                 Log.v("the id of cliecked ::: " ,user.getPhone() );
                 intent.putExtra("isGroup",isGroup.contains(user.getPhone()));
-                Log.wtf("is group" , String.valueOf(isGroup.contains(user.getPhone())));
                 startActivity(intent);
             }
         });

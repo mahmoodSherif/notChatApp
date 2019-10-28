@@ -15,16 +15,24 @@ import java.util.ArrayList;
 
 public class ImageViewerAdapter extends PagerAdapter {
     private Context context;
-    private ArrayList<String> photos;
+    private ArrayList<String> photos = null;
+    private String photo = "";
 
     public ImageViewerAdapter(Context context, ArrayList<String> photos) {
         this.context = context;
         this.photos = photos;
     }
+    public ImageViewerAdapter(Context context,String photo) {
+        this.context = context;
+        this.photo = photo;
+    }
 
     @Override
     public int getCount() {
+        if(photos!=null)
         return photos.size();
+        else
+            return 1;
     }
 
     @Override
@@ -37,9 +45,17 @@ public class ImageViewerAdapter extends PagerAdapter {
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
         ImageView imageView = new ImageView(context);
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        Glide.with(imageView.getContext())
-                .load(Uri.parse(photos.get(position)))
-                .into(imageView);
+        if(photos!=null)
+        {
+            Glide.with(imageView.getContext())
+                    .load(Uri.parse(photos.get(position)))
+                    .into(imageView);
+        }
+        else {
+            Glide.with(imageView.getContext())
+                    .load(Uri.parse(photo))
+                    .into(imageView);
+        }
         container.addView(imageView,0);
         return imageView;
     }

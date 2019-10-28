@@ -8,15 +8,23 @@ import android.os.Handler;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.MM.notChatApp.classes.User;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class notChatApp extends Application implements Application.ActivityLifecycleCallbacks {
 
+    public DatabaseReference usersRef;
+    public static Map<String , User> allUsers = new HashMap<>();
     private static void  status(String status) {
         HashMap<String,Object> hashMap = new HashMap<>();
         hashMap.put("UserStatues",status);
@@ -35,6 +43,26 @@ public class notChatApp extends Application implements Application.ActivityLifec
     public void onCreate() {
         super.onCreate();
         this.registerActivityLifecycleCallbacks(this);
+        usersRef = FirebaseDatabase.getInstance().getReference().child("users");
+        getAll();
+    }
+    public void getAll()
+    {
+        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren())
+                {
+                  User u = dataSnapshot1.getValue(User.class);
+                  allUsers.put(u.getPhone(),u);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void determineForegroundStatus() {

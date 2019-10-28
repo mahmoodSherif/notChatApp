@@ -112,8 +112,6 @@ public class ImageSendActivity extends AppCompatActivity {
         final StorageReference photoRef = photosStorageReference
                 .child(selectedImageUri.getLastPathSegment());
 
-        chatRef.child(userPhone).child(friendPhone).push().setValue(selectedImageUri.toString());
-        chatRef.child(friendPhone).child(userPhone).push().setValue(selectedImageUri.toString());
 
         Bitmap bmp = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -168,6 +166,8 @@ public class ImageSendActivity extends AppCompatActivity {
                     ChatActivity.notify(message, friendPhone);
                     Map<String,Object> rr = message.toMap(new ArrayList<String>(Arrays.asList(userPhone , friendPhone)));
                     curChatRef.push().updateChildren(rr);
+                    chatRef.child(userPhone).child(friendPhone).push().setValue(downloadedUri.toString());
+                    chatRef.child(friendPhone).child(userPhone).push().setValue(downloadedUri.toString());
                 }
             }
         });

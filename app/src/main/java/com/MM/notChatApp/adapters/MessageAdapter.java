@@ -27,6 +27,7 @@ import androidx.cardview.widget.CardView;
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
+import com.MM.notChatApp.notChatApp;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.target.SizeReadyCallback;
@@ -98,7 +99,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
              photoMessage = convertView.findViewById(R.id.Group_imageRes);
             messageTextView.setText(message.getText());
             timeTextView.setText(message.getTime());
-            senderName.setText(message.getSentby());
+            User user = notChatApp.allUsers.get(message.getSentby());
+            senderName.setText(user.getUserName());
             audioView = convertView.findViewById(R.id.Group_resAudioInclue);
             playAudio = audioView.findViewById(R.id.btnPlay);
             seekBar = audioView.findViewById(R.id.seekBar);

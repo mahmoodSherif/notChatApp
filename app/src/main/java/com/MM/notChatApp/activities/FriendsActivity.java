@@ -65,25 +65,23 @@ public class FriendsActivity extends AppCompatActivity {
     // Request code for READ_CONTACTS
 
     ProgressBar progressBar;
-    Map<String, Boolean>map;
+    Map<String, Boolean>map  = new HashMap<String, Boolean>();
 
     String userPhone;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends);
-        map = new HashMap<String, Boolean>();
         adapter = new friendsAdapter(this, R.layout.friends_list_item, users);
         // UI
         progressBar = findViewById(R.id.FriendsListProgressBar);
         FriendsList = findViewById(R.id.FriendsList);
         checkImage = findViewById(R.id.check);
+        userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
 
-            userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
-
-            // Database setUp
-            firebaseDatabase = FirebaseDatabase.getInstance();
-            curUserRef = firebaseDatabase.getReference().child("users").child(userPhone);
+        // Database setUp
+        firebaseDatabase = FirebaseDatabase.getInstance();
+        curUserRef = firebaseDatabase.getReference().child("users").child(userPhone);
         // ask for
         if(ActivityCompat.checkSelfPermission(FriendsActivity.this,Manifest.permission.READ_CONTACTS)!=
                 PackageManager.PERMISSION_GRANTED)
@@ -95,7 +93,12 @@ public class FriendsActivity extends AppCompatActivity {
             setFriendsList();
         }
     }
-    private void setFriendsList()
+    public FriendsActivity()
+    {
+
+    }
+
+    public void setFriendsList()
     {
         // Database setUp
         firebaseDatabase = FirebaseDatabase.getInstance();
@@ -117,19 +120,6 @@ public class FriendsActivity extends AppCompatActivity {
             FriendsList.setAdapter(adapter);
 
             getFromContacts();
-            for (String number : map.keySet()) {
-                if (checkIfNumVal(number)) {
-                    Log.v("NEWEE", "new one ");
-                    //   String num = numbers.get(i).replaceAll(" ","");
-                    // read(num);
-                } else {
-                    map.put(number, false);
-                }
-                counter++;
-            }
-            getBlocked();
-        read();
-
     }
     @Override
     public void onBackPressed() {
@@ -175,7 +165,7 @@ public class FriendsActivity extends AppCompatActivity {
         return true;
     }
 
-    private void read() {
+    public void read() {
         firebaseDatabase.getReference().child("users")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -187,7 +177,7 @@ public class FriendsActivity extends AppCompatActivity {
                            User user = snapshot.getValue(User.class);
                            if(map.get(user.getPhone())!=null) {
                                if (map.get(user.getPhone())) {
-                                   adapter.add(user);
+                                       adapter.add(user);
                                    progressBar.setVisibility(View.VISIBLE);
                                }
                            }
@@ -212,8 +202,6 @@ public class FriendsActivity extends AppCompatActivity {
 
     public void getFromContacts() {
         Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        ContentResolver cr = getContentResolver();
-//        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         String[] projection = new String[]{ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
                 ContactsContract.CommonDataKinds.Phone.NUMBER};
         Cursor names = getContentResolver().query(uri, projection, null, null, null);
@@ -236,6 +224,19 @@ public class FriendsActivity extends AppCompatActivity {
                 map.put(num, true);
             }
         } while (names.moveToNext());
+        for (String number : map.keySet()) {
+            if (checkIfNumVal(number)) {
+                Log.v("NEWEE", "new one ");
+                //   String num = numbers.get(i).replaceAll(" ","");
+                // read(num);
+            } else {
+                map.put(number, false);
+            }
+            counter++;
+        }
+        getBlocked();
+        read();
+
     }
     private void getBlocked(){
         curUserRef.child("blocked").addListenerForSingleValueEvent(new ValueEventListener() {

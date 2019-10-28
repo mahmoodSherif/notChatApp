@@ -332,6 +332,15 @@ public class ChatActivity extends AppCompatActivity {
                         view.setBackgroundColor(Color.parseColor("#4C525A"));
                     }
                 }
+                else {
+                    Message message = messageAdapter.getItem(i);
+                    if(message.getPhotoUrl()!=null)
+                    {
+                        Intent intent = new Intent(ChatActivity.this,ImageViewer.class);
+                        intent.putExtra("photo",message.getPhotoUrl());
+                        startActivity(intent);
+                    }
+                }
                 //view.setBackgroundColor(Color.parseColor("#242424"));
             }
         });
@@ -566,6 +575,7 @@ public class ChatActivity extends AppCompatActivity {
             Intent intent = new Intent(ChatActivity.this, ImageSendActivity.class);
             intent.putExtra("uriPhoto", image.toString());
             intent.putExtra("chatId", chatId);
+            intent.putExtra("curChatId", curChatId);
             startActivity(intent);
 
         }

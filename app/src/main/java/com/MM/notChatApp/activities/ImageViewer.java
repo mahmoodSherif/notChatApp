@@ -16,6 +16,7 @@ public class ImageViewer extends AppCompatActivity {
 
     ViewPager viewPager;
     ArrayList<String> photosList;
+    String photo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,9 +25,18 @@ public class ImageViewer extends AppCompatActivity {
         viewPager = findViewById(R.id.viewPager);
 
         Intent intent = getIntent();
-        photosList = intent.getStringArrayListExtra("list");
-        ImageViewerAdapter imageViewerAdapter = new ImageViewerAdapter(this,
-                photosList);
+        ImageViewerAdapter imageViewerAdapter;
+        if(intent.getStringArrayListExtra("list")==null)
+        {
+            photo = intent.getStringExtra("photo");
+          imageViewerAdapter  = new ImageViewerAdapter(this,
+                    photo);
+        }
+        else {
+            photosList = intent.getStringArrayListExtra("list");
+          imageViewerAdapter = new ImageViewerAdapter(this,
+                    photosList);
+        }
         viewPager.setAdapter(imageViewerAdapter);
     }
 }
