@@ -13,6 +13,7 @@ import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.blockAdapter;
 import com.MM.notChatApp.adapters.friendsAdapter;
 import com.MM.notChatApp.classes.User;
+import com.MM.notChatApp.pass;
 import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
@@ -31,8 +32,6 @@ public class blockedActivity extends AppCompatActivity {
     SwipeMenuListView blockedList;
     ArrayList<User> blockedUsers;
     String myPhone;
-    DatabaseReference userRef;
-    DatabaseReference userInfoRef;
     blockAdapter adapter;
     boolean ok ;
 
@@ -46,8 +45,6 @@ public class blockedActivity extends AppCompatActivity {
         if(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()!=null) {
             myPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
         }
-        userRef = FirebaseDatabase.getInstance().getReference().child("users").child(myPhone);
-        userInfoRef = FirebaseDatabase.getInstance().getReference().child("users");
 
         blockedUsers = new ArrayList<>();
         adapter = new blockAdapter(this,R.layout.friends_list_item,blockedUsers);
@@ -87,12 +84,8 @@ public class blockedActivity extends AppCompatActivity {
                 switch (index)
                 {
                     case 0:
-                        User selectedUser = (User) blockedList.getItemAtPosition(index);
-                        ok = false;
-                        if(UnBlockContact(selectedUser.getPhone())) {
-                            adapter.remove(selectedUser);
-                            adapter.notifyDataSetChanged();
-                        }
+                        User selectedUser = (User) blockedList.getItemAtPosition(position);
+                        UnBlockContact(selectedUser);
                         break;
 
                 }
@@ -101,15 +94,17 @@ public class blockedActivity extends AppCompatActivity {
         });
     }
 
-    private boolean UnBlockContact(final String userPhone) {
+    private boolean UnBlockContact(final User user) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(blockedActivity.this);
         builder.setMessage("Do you want to unblock this contact ?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        userRef.child("blocked").child(userPhone).setValue(null);
-                        userInfoRef.child(userPhone).child("blocking").child(myPhone).setValue(null);
-                        ok = true;
+                        pass.userRef.child(myPhone).child("blocked by me").child(user.getPhone()).setValue(null);
+                        pass.userRef.child(user.getPhone()).child("blocking me").child(myPhone).setValue(null);
+                        pass.chatListRef.child(myPhone).child(user.getPhone()).child("block").setValue(null);
+                        pass.chatListRef.child(user.getPhone()).child(myPhone).child("block").setValue(null);
+                        adapter.remove(user);
                     }
                 }).setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
@@ -125,7 +120,7 @@ public class blockedActivity extends AppCompatActivity {
 
     private void getBlockedContacts()
     {
-        userRef.child("blocked").addListenerForSingleValueEvent(new ValueEventListener() {
+        pass.userRef.child(myPhone).child("blocked by me").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot bloced :dataSnapshot.getChildren())
@@ -143,7 +138,7 @@ public class blockedActivity extends AppCompatActivity {
     }
 
     private void getBlocedUserInfo(String userPhone) {
-        userInfoRef.child(userPhone).addListenerForSingleValueEvent(new ValueEventListener() {
+        pass.userRef.child(userPhone).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 User user = dataSnapshot.getValue(User.class);

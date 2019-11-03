@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.MM.notChatApp.DBvars;
@@ -55,7 +56,7 @@ public class NewGroupActivity extends AppCompatActivity {
     ArrayList<String> users = new ArrayList<>();
     FloatingActionButton checkFab;
     String groupName;
-    Uri groupPhoto;
+    Uri groupPhoto =  Uri.parse("android.resource://com.MM.notChatApp/" + R.drawable.add_friend_icon);
     String userPhone;
 
     DatabaseReference chatsRef , chatListRef , usersRef;

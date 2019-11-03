@@ -20,6 +20,7 @@ import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.opengl.Visibility;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -53,6 +54,7 @@ import com.MM.notChatApp.classes.Message;
 import com.MM.notChatApp.classes.User;
 import com.MM.notChatApp.dialogs.FloatingView;
 import com.MM.notChatApp.pass;
+import com.MM.notChatApp.user.userInfo;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCanceledListener;
@@ -134,7 +136,7 @@ public class ChatActivity extends AppCompatActivity {
     // cur chat info
     String userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
     String chatId = null; // the phone for indv chat , the DB id for group chat
-    Uri photo = null;
+    String photo = null;
     String friendName = null;
     boolean readMessage = false;
     boolean Online = false;
@@ -171,6 +173,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private HashMap<String , Integer> pos = new HashMap<>();
     private boolean have = false;
+    private String bio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -193,10 +196,10 @@ public class ChatActivity extends AppCompatActivity {
     private void getDataFormCalling() {
         if (getIntent().getExtras() != null) {
             friendName = getIntent().getExtras().getString("username");
-            photo = Uri.parse(getIntent().getExtras().getString("userPhoto"));
+            photo = getIntent().getExtras().getString("userPhoto");
             chatId = getIntent().getExtras().getString("phone");
             isIndvChat = !getIntent().getExtras().getBoolean("isGroup");
-            Log.v("he5a :: ", String.valueOf(isIndvChat));
+            bio = getIntent().getExtras().getString("bio");
         }
         if(isIndvChat){
             usersList.add(userPhone);
@@ -283,6 +286,18 @@ public class ChatActivity extends AppCompatActivity {
         this.getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         getSupportActionBar().setCustomView(R.layout.custom_bar);
+        if(isIndvChat)
+        getSupportActionBar().getCustomView().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(ChatActivity.this, userInfo.class);
+                intent.putExtra("photo",photo);
+                intent.putExtra("name",friendName);
+                intent.putExtra("bio",bio);
+                intent.putExtra("phone",chatId);
+                startActivity(intent);
+            }
+        });
         final View view = getSupportActionBar().getCustomView();
         // bar views
         BarfriendName = view.findViewById(R.id.BarfriendName);
@@ -290,6 +305,7 @@ public class ChatActivity extends AppCompatActivity {
         typingFiled = view.findViewById(R.id.BarFriendLastSeen);
         backButton = view.findViewById(R.id.backButton);
 
+        typingFiled.setVisibility(View.GONE);
         //popup menu views
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View menuView = getLayoutInflater().inflate(R.layout.attachments_view, null, false);
@@ -495,6 +511,9 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.inchat_menu, menu);
+        MenuItem item = menu.getItem(2);
+        if(isIndvChat)
+            item.setVisible(false);
         return true;
     }
 
@@ -508,6 +527,9 @@ public class ChatActivity extends AppCompatActivity {
                 break;
             case R.id.block:
                 block();
+                break;
+            case R.id.exit_group :
+                exitGroup();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -688,6 +710,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void setTypingIndecator() {
+        if(isIndvChat)
         pass.chatListRef.child(chatId)
                 .child(userPhone)
                 .child("typing")
@@ -698,19 +721,24 @@ public class ChatActivity extends AppCompatActivity {
                                 if (dataSnapshot.getValue() == null) {
                                     dataSnapshot.getRef().setValue(false);
                                     if(Online){
+                                        typingFiled.setVisibility(View.VISIBLE);
                                         typingFiled.setText("Online");
                                     }else{
-                                        typingFiled.setText("last seen");
+                                        typingFiled.setVisibility(View.GONE);
+                                        typingFiled.setText("");
                                     }
                                     return;
                                 }
                                 if(dataSnapshot.getValue(Boolean.class)){
+                                    typingFiled.setVisibility(View.VISIBLE);
                                     typingFiled.setText("typing...");
                                 }else{
                                     if(Online){
+                                        typingFiled.setVisibility(View.VISIBLE);
                                         typingFiled.setText("Online");
                                     }else{
-                                        typingFiled.setText("last seen");
+                                        typingFiled.setVisibility(View.GONE);
+                                        typingFiled.setText("");
                                     }
                                 }
                             }
@@ -975,8 +1003,10 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void block() {
-        pass.userRef.child("blocking").child(chatId).setValue(true);
-        //friendef.child("blocked").child(userPhone).setValue(true);
+        pass.userRef.child(userPhone).child("blocked by me").child(chatId).setValue(true);
+        pass.userRef.child(chatId).child("blocking me").child(userPhone).setValue(true);
+        pass.chatListRef.child(userPhone).child(chatId).child("block").setValue(true);
+        pass.chatListRef.child(chatId).child(userPhone).child("block").setValue(true);
         finish();
     }
 
@@ -984,13 +1014,21 @@ public class ChatActivity extends AppCompatActivity {
         pass.groupRef.child(chatId).child(DBvars.GROUP.groupMembers).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                usersList = dataSnapshot.getValue(new GenericTypeIndicator<ArrayList<String>>(){});
+                for(DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()){
+                    usersList.add(dataSnapshot1.getKey());
+                }
                 setOnClickListenerForSendButton();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
+    }
+    private void exitGroup(){
+        pass.chatListRef.child(pass.userPhone).child(chatId).setValue(null);
+        pass.groupRef.child(chatId).child(DBvars.GROUP.groupMembers).child(pass.userPhone)
+                .setValue(null);
+        finish();
     }
 
 }

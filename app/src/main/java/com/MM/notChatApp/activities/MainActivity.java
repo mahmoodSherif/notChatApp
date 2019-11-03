@@ -122,8 +122,8 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("username", user.getUserName());
                 intent.putExtra("phone", user.getPhone());
                 intent.putExtra("userPhoto", user.getUserPhotoUrl());
-                Log.v("the id of cliecked ::: " ,user.getPhone() );
                 intent.putExtra("isGroup",isGroup.contains(user.getPhone()));
+                intent.putExtra("bio",user.getUserBio());
                 startActivity(intent);
             }
         });
@@ -291,22 +291,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void create(SwipeMenu menu) {
-                // create "open" item
-                SwipeMenuItem openItem = new SwipeMenuItem(
-                        getApplicationContext());
-                // set item background
-                openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
-                        0xCE)));
-                // set item width
-                openItem.setWidth(170);
-                // set item title
-                openItem.setTitle("Open");
-                // set item title fontsize
-                openItem.setTitleSize(18);
-                // set item title font color
-                openItem.setTitleColor(R.color.colorAccent);
-                // add to menu
-                menu.addMenuItem(openItem);
 
                 // create "delete" item
                 SwipeMenuItem deleteItem = new SwipeMenuItem(
@@ -332,15 +316,6 @@ public class MainActivity extends AppCompatActivity {
                 User user = messagesListAdapter.getItem(position);
                 switch (index) {
                     case 0:
-                        // open
-                        Intent intent = new Intent(MainActivity.this,userInfo.class);
-                        intent.putExtra("photo",user.getUserPhotoUrl());
-                        intent.putExtra("name",user.getUserName());
-                        intent.putExtra("bio",user.getUserBio());
-                        intent.putExtra("phone",user.getPhone());
-                        startActivity(intent);
-                        break;
-                    case 1:
                         // delete
                         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                         builder.setMessage("Delete chat with "+user.getUserName()+" ?")
@@ -377,10 +352,31 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 Log.e("update :: ",dataSnapshot.toString());
+                boolean is = false;
                 for(DataSnapshot x : dataSnapshot.getChildren()) {
-                    final String lastMessage = x.child("text").getValue(String.class);
+                    is = true;
+                    String lastMessage = x.child("text").getValue(String.class);
                     User user = messagesListAdapter.getItem(postion);
+                    if(x.child(DBvars.MESSAGE.photoUrl).exists()){
+                        if(lastMessage.length() == 0){
+                            lastMessage = "📷 Photo";
+                        }else{
+                            lastMessage = "📷 ".concat(lastMessage);
+                        }
+                    }
+                    if(x.child(DBvars.MESSAGE.audioUrl).exists()){
+                        lastMessage ="🎤 voice message";
+                    }
+                    if(x.child(DBvars.MESSAGE.docUrl).exists()){
+                        lastMessage ="📃 Document";
+                    }
                     user.setLastMessage(lastMessage);
+                    usersList.set(postion, user);
+                    messagesListAdapter.notifyDataSetChanged();
+                }
+                if(!is){
+                    User user = messagesListAdapter.getItem(postion);
+                    user.setLastMessage("");
                     usersList.set(postion, user);
                     messagesListAdapter.notifyDataSetChanged();
                 }
@@ -533,8 +529,9 @@ public class MainActivity extends AppCompatActivity {
     private void addMessageToAdapter(DataSnapshot dataSnapshot){
         if(dataSnapshot.child(DBvars.GROUP.isGroup).exists()){
             final String id = dataSnapshot.getKey();
+            final String chatId = dataSnapshot.child("id").getValue(String.class);
             messagesListAdapter.add(new User(id));
-            chatIdMap.put(id, id);
+            chatIdMap.put(id, chatId);
             isGroup.add(id);
             makeGroupListeners(usersList.size()-1 , id);
         }else {
@@ -542,7 +539,8 @@ public class MainActivity extends AppCompatActivity {
             final String chatId = dataSnapshot.child("id").getValue(String.class);
             messagesListAdapter.add(new User(friendPhone));
             chatIdMap.put(friendPhone, chatId);
-            makeFriendListeners(usersList.size() - 1, friendPhone);
+            if(!dataSnapshot.child("block").exists())
+                makeFriendListeners(usersList.size() - 1, friendPhone);
         }
     }
     // chat messages
@@ -566,14 +564,14 @@ public class MainActivity extends AppCompatActivity {
         final User curChatFriend = messagesListAdapter.getItem(postion);
         final String curPhone = curChatFriend.getPhone();
         final DatabaseReference refForChat = firebaseDatabase.getReference().child("chats").child(chatIdMap.get(curPhone));
-
         refForChat.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for(DataSnapshot curMessage : dataSnapshot.getChildren()){
                         curMessage.child(pass.userPhone).getRef().setValue(false);
                 }
-                usersList.remove(postion);
+                if(!isGroup.contains(curPhone))
+                    usersList.remove(postion);
                 messagesListAdapter.notifyDataSetChanged();
             }
             @Override
