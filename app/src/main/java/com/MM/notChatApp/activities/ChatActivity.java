@@ -515,8 +515,11 @@ public class ChatActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.inchat_menu, menu);
         MenuItem item = menu.getItem(2);
+        MenuItem block = menu.getItem(0);
         if(isIndvChat)
             item.setVisible(false);
+        if(!isIndvChat)
+            block.setVisible(false);
         return true;
     }
 

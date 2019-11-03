@@ -49,7 +49,6 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
     private boolean group = false;
     private int lastPos = -1;
-    private Runnable runnable;
     private SeekBar seekBar;
     private Handler handler = new Handler();
     private String userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
@@ -436,7 +435,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                     {
                         if(player!=null) {
                             player.seekTo(i);
-                            seekBar.setProgress(i);
+                            //seekBar.setProgress(i);
                         }
                     }
                 }
@@ -513,7 +512,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                                     public void onPrepared(MediaPlayer mediaPlayer) {
                                         seekBar.setMax(player.getDuration());
                                         player.start();
-                                        updateseek();
+                                   //     updateseek();
 
                                     }
                                 });
@@ -549,7 +548,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                                 public void onPrepared(MediaPlayer mediaPlayer) {
                                     seekBar.setMax(player.getDuration());
                                     player.start();
-                                    updateseek();
+                                    //updateseek();
 
                                 }
                             });
@@ -587,28 +586,6 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         }
         return convertView;
     }
-
-    private void updateseek()
-    {
-        if(player!=null) {
-            Toast.makeText(getContext(),String.valueOf(player.getCurrentPosition()),Toast.LENGTH_LONG).show();
-            seekBar.setProgress(player.getCurrentPosition());
-            handler.postDelayed(runnable,100);
-            if(player.isPlaying())
-            {
-                runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                     updateseek();
-                    }
-                };
-            }
-            else {
-                seekBar.setProgress(0);
-            }
-        }
-    }
-
     @Override
     public void add(Message object) {
         userList.add(object);
