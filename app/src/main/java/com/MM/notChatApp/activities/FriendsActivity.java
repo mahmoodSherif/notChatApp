@@ -52,6 +52,7 @@ public class FriendsActivity extends AppCompatActivity {
     //GUI elements
     ListView FriendsList;
     ImageView checkImage;
+    MenuItem item;
 
     //listView
     friendsAdapter adapter;
@@ -121,12 +122,7 @@ public class FriendsActivity extends AppCompatActivity {
 
             getFromContacts();
     }
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        Intent intent = new Intent(FriendsActivity.this,MainActivity.class);
-        startActivity(intent);
-    }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -153,7 +149,6 @@ public class FriendsActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        adapter.clear();
     }
 
     private boolean checkIfNumVal(String s) {
@@ -189,6 +184,7 @@ public class FriendsActivity extends AppCompatActivity {
                            if(counter == count)
                            {
                                progressBar.setVisibility(View.GONE);
+                               item.setVisible(true);
                            }
                        }
                     }
@@ -239,7 +235,8 @@ public class FriendsActivity extends AppCompatActivity {
 
     }
     private void getBlocked(){
-        curUserRef.child("blocked").addListenerForSingleValueEvent(new ValueEventListener() {
+        curUserRef.child("blocked by me")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for(DataSnapshot user : dataSnapshot.getChildren()){
@@ -256,6 +253,8 @@ public class FriendsActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.friends_activity_menu, menu);
+         item = menu.getItem(0);
+        item.setVisible(false);
         return true;
     }
 

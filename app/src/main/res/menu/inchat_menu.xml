@@ -9,4 +9,8 @@
         android:id="@+id/showMedia"
         android:title="Media"
         />
+    <item
+        android:id="@+id/exit_group"
+        android:title="exit group"
+        />
 </menu>
