@@ -9,6 +9,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -96,8 +97,8 @@ public class ChatActivity extends AppCompatActivity {
     private static final int READ_REQUEST_CODE = 42;
     private static final int REQUEST_CODE_GALLERY = 999;
     private static final int CAMERA_REQUEST_CODE = 200;
-    private static final int AUDIO_REQUSET_CODE = 201;
     private static final int IMAGE_PICK_CAMERA_CODE = 1001;
+    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
     private static final String LOG_TAG = "recorder";
     private String[] permissions;
 
@@ -195,11 +196,11 @@ public class ChatActivity extends AppCompatActivity {
 
     private void getDataFormCalling() {
         if (getIntent().getExtras() != null) {
-            friendName = getIntent().getExtras().getString("username");
-            photo = getIntent().getExtras().getString("userPhoto");
-            chatId = getIntent().getExtras().getString("phone");
+            friendName = getIntent().getExtras().getString(DBvars.USER.userName);
+            photo = getIntent().getExtras().getString(DBvars.USER.userPhotoUrl);
+            chatId = getIntent().getExtras().getString(DBvars.USER.phone);
             isIndvChat = !getIntent().getExtras().getBoolean("isGroup");
-            bio = getIntent().getExtras().getString("bio");
+            bio = getIntent().getExtras().getString(DBvars.USER.userBio);
         }
         if(isIndvChat){
             usersList.add(userPhone);
@@ -214,7 +215,6 @@ public class ChatActivity extends AppCompatActivity {
         recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
         recorder.setOutputFile(fileName);
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-
         try {
             recorder.prepare();
         } catch (IOException e) {
@@ -250,7 +250,7 @@ public class ChatActivity extends AppCompatActivity {
                         final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                         final Message message = new Message(
                                 Time.format(new Date()), uri.toString(), 2, userPhone);
-                        message.setText("🎤 voice message(0:00)");
+                        message.setText("🎤 voice message");
                         ChatActivity.this.notify(message, chatId);
                         message.setText("");
                         Map<String, Object> rr = message.toMap(usersList);
@@ -278,8 +278,6 @@ public class ChatActivity extends AppCompatActivity {
                 == (PackageManager.PERMISSION_GRANTED);
         storagePremission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == (PackageManager.PERMISSION_GRANTED);
-
-
     }
 
     private void initUI() {
@@ -291,10 +289,10 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ChatActivity.this, userInfo.class);
-                intent.putExtra("photo",photo);
-                intent.putExtra("name",friendName);
-                intent.putExtra("bio",bio);
-                intent.putExtra("phone",chatId);
+                intent.putExtra(DBvars.USER.phone,photo);
+                intent.putExtra(DBvars.USER.userName,friendName);
+                intent.putExtra(DBvars.USER.userBio,bio);
+                intent.putExtra(DBvars.USER.phone,chatId);
                 startActivity(intent);
             }
         });
@@ -427,13 +425,10 @@ public class ChatActivity extends AppCompatActivity {
         mSendButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                if (checkaudioPermission()) {
+                if (audioPremission && storagePremission){
                     rec = true;
                     Toast.makeText(getApplicationContext(), "recording..", Toast.LENGTH_SHORT).show();
                     startRecord();
-                }
-                else {
-                    ActivityCompat.requestPermissions(ChatActivity.this, permissions, AUDIO_REQUSET_CODE);
                 }
                 return true;
             }
@@ -441,7 +436,7 @@ public class ChatActivity extends AppCompatActivity {
         mSendButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (checkaudioPermission()) {
+                if (audioPremission && storagePremission) {
                     if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
                         if (mMessageEditText.getText().toString().length() == 0) {
                             Toast.makeText(getApplicationContext(), "Stop ", Toast.LENGTH_SHORT).show();
@@ -515,11 +510,8 @@ public class ChatActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.inchat_menu, menu);
         MenuItem item = menu.getItem(2);
-        MenuItem block = menu.getItem(0);
         if(isIndvChat)
             item.setVisible(false);
-        if(!isIndvChat)
-            block.setVisible(false);
         return true;
     }
 
@@ -585,16 +577,6 @@ public class ChatActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show();
                 }
-            }
-        }
-        if(requestCode == AUDIO_REQUSET_CODE)
-        {
-            if(grantResults.length>0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-            {
-                Toast.makeText(this, "Permission granted", Toast.LENGTH_LONG).show();
-            }
-            else {
-                Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show();
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -1013,13 +995,6 @@ public class ChatActivity extends AppCompatActivity {
     private boolean checkCameraPermission() {
         //storage permission to get high quality image we have to save image to ex storage first
         boolean result = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == (PackageManager.PERMISSION_GRANTED);
-        boolean storagePremission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == (PackageManager.PERMISSION_GRANTED);
-        return result && storagePremission;
-    }
-    private boolean checkaudioPermission() {
-        //storage permission to get high quality image we have to save image to ex storage first
-        boolean result = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == (PackageManager.PERMISSION_GRANTED);
         boolean storagePremission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == (PackageManager.PERMISSION_GRANTED);
         return result && storagePremission;

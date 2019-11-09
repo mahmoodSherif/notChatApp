@@ -119,11 +119,11 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 User user = (User) adapterView.getItemAtPosition(i);
                 Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-                intent.putExtra("username", user.getUserName());
-                intent.putExtra("phone", user.getPhone());
-                intent.putExtra("userPhoto", user.getUserPhotoUrl());
+                intent.putExtra(DBvars.USER.userName, user.getUserName());
+                intent.putExtra(DBvars.USER.phone, user.getPhone());
+                intent.putExtra(DBvars.USER.userPhotoUrl, user.getUserPhotoUrl());
                 intent.putExtra("isGroup",isGroup.contains(user.getPhone()));
-                intent.putExtra("bio",user.getUserBio());
+                intent.putExtra(DBvars.USER.userBio,user.getUserBio());
                 startActivity(intent);
             }
         });
