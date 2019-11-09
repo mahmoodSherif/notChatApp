@@ -145,11 +145,11 @@ public class MainActivity extends AppCompatActivity {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     pass.userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+                    FirebaseMessaging.getInstance().subscribeToTopic("user_"+pass.userPhone.substring(1));
                     getChatList();
                 } else {
                     signIn();
                 }
-                FirebaseMessaging.getInstance().subscribeToTopic("user_"+pass.userPhone.substring(1));
             }
         };
     }
