@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.MM.notChatApp.DBvars;
 import com.MM.notChatApp.R;
 import com.bumptech.glide.Glide;
 import com.MM.notChatApp.classes.User;
@@ -67,10 +68,10 @@ public class userInfo extends AppCompatActivity {
         Intent intent = getIntent();
         if(intent!=null && intent.getExtras()!=null)
         {
-            String FriendName = intent.getStringExtra("name");
-            String FriendPhoto = intent.getStringExtra("photo");
-            String FriendBio = intent.getStringExtra("bio");
-            String phone = intent.getStringExtra("phone");
+            String FriendName = intent.getStringExtra(DBvars.USER.userName);
+            String FriendPhoto = intent.getStringExtra(DBvars.USER.userPhotoUrl);
+            String FriendBio = intent.getStringExtra(DBvars.USER.userBio);
+            String phone = intent.getStringExtra(DBvars.USER.phone);
             Glide.with(userInfo.this)
                     .load(FriendPhoto)
                     .into(userImage);

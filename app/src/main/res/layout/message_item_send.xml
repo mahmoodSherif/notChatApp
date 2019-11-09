@@ -8,7 +8,6 @@
     android:padding="8dp">
 
     <LinearLayout
-        android:id="@+id/xx"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/message_right"
@@ -47,7 +46,7 @@
                 />
 
             <TextView
-                android:id="@+id/MessageSend"
+                android:id="@+id/Message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:maxWidth="300dp"
@@ -58,7 +57,7 @@
 
 
         <TextView
-            android:id="@+id/MessageTimeSend"
+            android:id="@+id/MessageTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="3:00 pm"

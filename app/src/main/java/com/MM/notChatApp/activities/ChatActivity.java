@@ -9,6 +9,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -195,11 +196,11 @@ public class ChatActivity extends AppCompatActivity {
 
     private void getDataFormCalling() {
         if (getIntent().getExtras() != null) {
-            friendName = getIntent().getExtras().getString("username");
-            photo = getIntent().getExtras().getString("userPhoto");
-            chatId = getIntent().getExtras().getString("phone");
+            friendName = getIntent().getExtras().getString(DBvars.USER.userName);
+            photo = getIntent().getExtras().getString(DBvars.USER.userPhotoUrl);
+            chatId = getIntent().getExtras().getString(DBvars.USER.phone);
             isIndvChat = !getIntent().getExtras().getBoolean("isGroup");
-            bio = getIntent().getExtras().getString("bio");
+            bio = getIntent().getExtras().getString(DBvars.USER.userBio);
         }
         if(isIndvChat){
             usersList.add(userPhone);
@@ -214,7 +215,6 @@ public class ChatActivity extends AppCompatActivity {
         recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
         recorder.setOutputFile(fileName);
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-
         try {
             recorder.prepare();
         } catch (IOException e) {
@@ -250,7 +250,7 @@ public class ChatActivity extends AppCompatActivity {
                         final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                         final Message message = new Message(
                                 Time.format(new Date()), uri.toString(), 2, userPhone);
-                        message.setText("🎤 voice message(0:00)");
+                        message.setText("🎤 voice message");
                         ChatActivity.this.notify(message, chatId);
                         message.setText("");
                         Map<String, Object> rr = message.toMap(usersList);
@@ -278,8 +278,6 @@ public class ChatActivity extends AppCompatActivity {
                 == (PackageManager.PERMISSION_GRANTED);
         storagePremission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == (PackageManager.PERMISSION_GRANTED);
-
-
     }
 
     private void initUI() {
@@ -291,10 +289,10 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ChatActivity.this, userInfo.class);
-                intent.putExtra("photo",photo);
-                intent.putExtra("name",friendName);
-                intent.putExtra("bio",bio);
-                intent.putExtra("phone",chatId);
+                intent.putExtra(DBvars.USER.phone,photo);
+                intent.putExtra(DBvars.USER.userName,friendName);
+                intent.putExtra(DBvars.USER.userBio,bio);
+                intent.putExtra(DBvars.USER.phone,chatId);
                 startActivity(intent);
             }
         });
@@ -427,7 +425,7 @@ public class ChatActivity extends AppCompatActivity {
         mSendButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                if (audioPremission && storagePremission) {
+                if (audioPremission && storagePremission){
                     rec = true;
                     Toast.makeText(getApplicationContext(), "recording..", Toast.LENGTH_SHORT).show();
                     startRecord();

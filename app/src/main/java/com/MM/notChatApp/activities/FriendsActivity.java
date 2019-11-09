@@ -23,6 +23,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.MM.notChatApp.DBvars;
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.adapters.friendsAdapter;
 import com.MM.notChatApp.classes.User;
@@ -82,7 +83,7 @@ public class FriendsActivity extends AppCompatActivity {
 
         // Database setUp
         firebaseDatabase = FirebaseDatabase.getInstance();
-        curUserRef = firebaseDatabase.getReference().child("users").child(userPhone);
+        curUserRef = pass.userRef.child(userPhone);
         // ask for
         if(ActivityCompat.checkSelfPermission(FriendsActivity.this,Manifest.permission.READ_CONTACTS)!=
                 PackageManager.PERMISSION_GRANTED)
@@ -110,13 +111,12 @@ public class FriendsActivity extends AppCompatActivity {
                 User selectedUser = (User) adapterView.getItemAtPosition(i);
                 Intent intent = new Intent(FriendsActivity.this, ChatActivity.class);
                 //  intent.putExtra("userFromIntent", (Parcelable) selectedUser);
-                intent.putExtra("username", selectedUser.getUserName());
-                intent.putExtra("phone", selectedUser.getPhone());
-                intent.putExtra("userPhoto", selectedUser.getUserPhotoUrl());
+                intent.putExtra(DBvars.USER.userName, selectedUser.getUserName());
+                intent.putExtra(DBvars.USER.phone, selectedUser.getPhone());
+                intent.putExtra(DBvars.USER.userPhotoUrl, selectedUser.getUserPhotoUrl());
                 startActivity(intent);
             }
         });
-
            // adapter = new friendsAdapter(this, R.layout.friends_list_item, users);
             FriendsList.setAdapter(adapter);
 
@@ -133,6 +133,7 @@ public class FriendsActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(getApplicationContext(), "You don't have permission to acscess file location!",
                             Toast.LENGTH_SHORT).show();
+                    finish();
                 }
             }
 

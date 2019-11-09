@@ -7,7 +7,6 @@
     android:padding="8dp">
 
     <LinearLayout
-        android:id="@+id/xx"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/messages_left"
@@ -15,7 +14,7 @@
         android:padding="8dp">
 
         <ImageView
-            android:id="@+id/imageRes"
+            android:id="@+id/image"
             android:layout_width="250dp"
             android:layout_height="250dp"
             android:adjustViewBounds="true"
@@ -23,18 +22,14 @@
         <include
             android:id="@+id/resAudioInclue"
             android:visibility="gone"
-            layout="@layout/audio_layout"
-            />
+            layout="@layout/audio_layout"/>
         <include
             android:id="@+id/resDocLayout"
             android:visibility="gone"
-            layout="@layout/doc_layout"
-            />
-
-
+            layout="@layout/doc_layout" />
 
         <TextView
-            android:id="@+id/MessageRes"
+            android:id="@+id/Message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxWidth="300dp"
@@ -43,7 +38,7 @@
             android:textSize="18dp" />
 
         <TextView
-            android:id="@+id/MessageTimeRes"
+            android:id="@+id/MessageTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="3:00 pm"
