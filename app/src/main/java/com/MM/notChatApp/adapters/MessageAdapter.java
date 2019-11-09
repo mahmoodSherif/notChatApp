@@ -431,10 +431,10 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         View convertView;
         if(group){
             if(byMe){
-                convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); //TODO make group UI
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.message_item_send, parent, false); //TODO make group UI
             }
             else{
-                convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); // //TODO make group UI
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.group_message_item, parent, false); // //TODO make group UI
                 senderName = convertView.findViewById(R.id.Group_FriendName);
                 User user = notChatApp.allUsers.get(message.getSentby());
                 senderName.setText(user.getUserName());
@@ -460,10 +460,10 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         View convertView;
         if(group){
             if(byMe){
-                convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); //TODO make group UI
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_res_layout, parent, false); //TODO make group UI
             }
             else{
-                convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); // //TODO make group UI
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_group_layout, parent, false); // //TODO make group UI
                 senderName = convertView.findViewById(R.id.Group_FriendName);
                 User user = notChatApp.allUsers.get(message.getSentby());
                 senderName.setText(user.getUserName());
@@ -471,12 +471,16 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
         }
         else if(byMe){
-            convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); // TODO make UI
+            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_send_layout, parent, false); // TODO make UI
         }
         else{
-            convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); // TODO make UI
+            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_res_layout, parent, false); // TODO make UI
         }
+        timeTextView = convertView.findViewById(R.id.MessageTime);
+        timeTextView.setText(message.getTime());
         photoMessage = convertView.findViewById(R.id.image);
+        messageTextView = convertView.findViewById(R.id.Message);
+
         if (message.getText() == null) {
             messageTextView.setVisibility(View.GONE);
         } else {
@@ -497,10 +501,10 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         View convertView;
         if(group){
             if(byMe){
-                convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); //TODO make group UI
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_layout, parent, false); //TODO make group UI
             }
             else{
-                convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); // //TODO make group UI
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_group_res, parent, false); // //TODO make group UI
                 senderName = convertView.findViewById(R.id.Group_FriendName);
                 User user = notChatApp.allUsers.get(message.getSentby());
                 senderName.setText(user.getUserName());
@@ -508,14 +512,16 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
         }
         else if(byMe){
-            convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); // TODO make UI
+            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_layout, parent, false); // TODO make UI
         }
         else{
-            convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); // TODO make UI
+            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_layout_res, parent, false); // TODO make UI
         }
-        audioView = convertView.findViewById(R.id.Group_resAudioInclue);
-        playAudio = audioView.findViewById(R.id.btnPlay);
-        seekBar = audioView.findViewById(R.id.seekBar);
+        //audioView = convertView.findViewById(R.id.Group_resAudioInclue);
+        playAudio = convertView.findViewById(R.id.btnPlay);
+        seekBar = convertView.findViewById(R.id.seekBar);
+        timeTextView = convertView.findViewById(R.id.MessageTime);
+        timeTextView.setText(message.getTime());
         playAudio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -592,30 +598,27 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         View convertView;
         if(group){
             if(byMe){
-                convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); //TODO make group UI
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.doc_layout, parent, false); //TODO make group UI
             }
             else{
-                convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); // //TODO make group UI
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.group_doc_res, parent, false); // //TODO make group UI
                 senderName = convertView.findViewById(R.id.Group_FriendName);
                 User user = notChatApp.allUsers.get(message.getSentby());
                 senderName.setText(user.getUserName());
             }
         }
         else if(byMe){
-            convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); // TODO make UI
+            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.doc_layout, parent, false); // TODO make UI
         }
         else{
-            convertView = ((Activity) getContext()).getLayoutInflater().inflate(null, parent, false); // TODO make UI
+            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.doc_layout_res, parent, false); // TODO make UI
         }
-        photoMessage = convertView.findViewById(R.id.image);
-        if (message.getText() == null) {
-            messageTextView.setVisibility(View.GONE);
-        } else {
-            messageTextView.setVisibility(View.VISIBLE);
-        }
-        docView = convertView.findViewById(R.id.Group_resDocLayout);
-        docImage = docView.findViewById(R.id.docIcon);
-        docText = docView.findViewById(R.id.docText);
+
+        //docView = convertView.findViewById(R.id.Group_resDocLayout);
+        docImage = convertView.findViewById(R.id.docIcon);
+        docText = convertView.findViewById(R.id.docText);
+        timeTextView = convertView.findViewById(R.id.MessageTime);
+        timeTextView.setText(message.getTime());
         docImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

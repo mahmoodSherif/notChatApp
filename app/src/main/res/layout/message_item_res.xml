@@ -19,14 +19,7 @@
             android:layout_height="250dp"
             android:adjustViewBounds="true"
             android:visibility="gone" />
-        <include
-            android:id="@+id/resAudioInclue"
-            android:visibility="gone"
-            layout="@layout/audio_layout"/>
-        <include
-            android:id="@+id/resDocLayout"
-            android:visibility="gone"
-            layout="@layout/doc_layout" />
+
 
         <TextView
             android:id="@+id/Message"
@@ -44,20 +37,5 @@
             android:text="3:00 pm"
             android:textSize="10dp" />
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/resCardView"
-            android:layout_width="250dp"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:cardUseCompatPadding="true">
-
-            <TextView
-                android:id="@+id/resDoctxt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="doc" />
-
-        </androidx.cardview.widget.CardView>
     </LinearLayout>
 </LinearLayout>

@@ -1,22 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    >
+    android:orientation="horizontal"
+    android:gravity="end"
+    android:padding="8dp">
 
-    <ImageButton
-        android:layout_gravity="center"
-        android:background="@null"
-        android:id="@+id/btnPlay"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_media_play" />
+        android:background="@drawable/message_right"
+        android:orientation="vertical"
+        android:padding="8dp">
 
-    <SeekBar
-        android:id="@+id/seekBar"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center" />
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:adjustViewBounds="true"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/MessageStatues"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:padding="5dp"
+                android:src="@drawable/sent16" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:layout_gravity="center"
+                    android:background="@null"
+                    android:id="@+id/btnPlay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@android:drawable/ic_media_play" />
+
+                <SeekBar
+                    android:id="@+id/seekBar"
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center" />
+            </LinearLayout>
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/MessageTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="3:00 pm"
+            android:textSize="10sp" />
+
     </LinearLayout>
+</LinearLayout>

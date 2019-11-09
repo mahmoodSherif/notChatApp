@@ -4,7 +4,6 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-
     <LinearLayout
         android:id="@+id/groupLay"
         android:layout_width="wrap_content"
@@ -12,13 +11,6 @@
         android:background="@drawable/messages_left"
         android:orientation="vertical"
         android:padding="8dp">
-
-        <ImageView
-            android:id="@+id/image"
-            android:layout_width="250dp"
-            android:layout_height="250dp"
-            android:adjustViewBounds="true"
-            android:visibility="gone" />
 
         <TextView
             android:id="@+id/Group_FriendName"
@@ -28,6 +20,12 @@
             android:text="Name"
             android:textColor="@color/colorAccent"
             android:textSize="18sp" />
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:adjustViewBounds="true" />
+
 
         <TextView
             android:id="@+id/Message"
