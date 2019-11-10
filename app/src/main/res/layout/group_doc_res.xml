@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
+    android:padding="8dp"
     android:background="@drawable/messages_left"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
@@ -15,23 +16,40 @@
         android:textColor="@color/colorAccent"
         android:textSize="18sp" />
     <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-    <ImageButton
-        android:background="@null"
-        android:layout_gravity="center"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/docIcon"
-        android:src="@drawable/filedoc"/>
-    <TextView
-        android:layout_gravity="center"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Document"
-        android:textColor="#ffff"
-        android:id="@+id/docText"/>
-    </LinearLayout>
+        android:background="@drawable/messages_left"
+        android:orientation="vertical"
+        >
 
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageButton
+                android:background="@null"
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/docIcon"
+                android:src="@drawable/filedoc"/>
+            <TextView
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Document"
+                android:textColor="#ffff"
+                android:id="@+id/docText"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/MessageTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="3:00 pm"
+            android:textSize="10dp" />
+
+    </LinearLayout>
 </LinearLayout>

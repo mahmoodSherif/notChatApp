@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">not Chat App</string>
+    <string name="app_name">Not Chat App</string>
     <string name="action_settings">Settings</string>
     <string name="typing">typing…</string>
 </resources>

@@ -4,7 +4,7 @@
     tools:context="com.MM.notChatApp.activities.MainActivity">
     <item
         android:id="@+id/info"
-        android:title="info" />
+        android:title="Info" />
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
@@ -13,11 +13,11 @@
     <item
         android:id="@+id/searchMenu"
         android:icon="@drawable/search_icon"
-        android:title="search"
+        android:title="Search"
         app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView"/>
     <item
         android:id="@+id/signOut"
-        android:title="sign out"
+        android:title="Sign out"
         />
 </menu>

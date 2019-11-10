@@ -56,7 +56,7 @@ public class NewGroupActivity extends AppCompatActivity {
     ArrayList<String> users = new ArrayList<>();
     FloatingActionButton checkFab;
     String groupName;
-    Uri groupPhoto =  Uri.parse("android.resource://com.MM.notChatApp/" + R.drawable.add_friend_icon);
+    Uri groupPhoto =  Uri.parse("android.resource://com.MM.notChatApp/" + R.drawable.user_empty_photo);
     String userPhone;
 
     DatabaseReference chatsRef , chatListRef , usersRef;

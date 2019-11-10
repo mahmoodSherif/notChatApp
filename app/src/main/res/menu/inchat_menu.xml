@@ -11,6 +11,10 @@
         />
     <item
         android:id="@+id/exit_group"
-        android:title="exit group"
+        android:title="Exit group"
+        />
+    <item
+        android:id="@+id/add_member"
+        android:title="Add friend"
         />
 </menu>

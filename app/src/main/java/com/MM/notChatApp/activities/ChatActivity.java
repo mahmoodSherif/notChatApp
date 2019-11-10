@@ -99,6 +99,7 @@ public class ChatActivity extends AppCompatActivity {
     private static final int CAMERA_REQUEST_CODE = 200;
     private static final int IMAGE_PICK_CAMERA_CODE = 1001;
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
+    private static final int AUDIO_REQUSET_CODE = 201;
     private static final String LOG_TAG = "recorder";
     private String[] permissions;
 
@@ -208,6 +209,14 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
+    private boolean checkaudioPermission() {
+        //storage permission to get high quality image we have to save image to ex storage first
+        boolean result = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == (PackageManager.PERMISSION_GRANTED);
+        boolean storagePremission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == (PackageManager.PERMISSION_GRANTED);
+        return result && storagePremission;
+    }
+
     private void startRecord() {
         recorder = new MediaRecorder();
         recorder = new MediaRecorder();
@@ -243,7 +252,6 @@ public class ChatActivity extends AppCompatActivity {
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Toast.makeText(ChatActivity.this, "success", Toast.LENGTH_SHORT).show();
                 ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
@@ -262,7 +270,7 @@ public class ChatActivity extends AppCompatActivity {
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                Toast.makeText(getApplicationContext(), "pro", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Sent", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -289,7 +297,7 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ChatActivity.this, userInfo.class);
-                intent.putExtra(DBvars.USER.phone,photo);
+                intent.putExtra(DBvars.USER.userPhotoUrl,photo);
                 intent.putExtra(DBvars.USER.userName,friendName);
                 intent.putExtra(DBvars.USER.userBio,bio);
                 intent.putExtra(DBvars.USER.phone,chatId);
@@ -425,10 +433,13 @@ public class ChatActivity extends AppCompatActivity {
         mSendButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                if (audioPremission && storagePremission){
+                if (checkaudioPermission()){
                     rec = true;
                     Toast.makeText(getApplicationContext(), "recording..", Toast.LENGTH_SHORT).show();
                     startRecord();
+                }
+                else {
+                    ActivityCompat.requestPermissions(ChatActivity.this, permissions, AUDIO_REQUSET_CODE);
                 }
                 return true;
             }
@@ -436,7 +447,7 @@ public class ChatActivity extends AppCompatActivity {
         mSendButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (audioPremission && storagePremission) {
+                if (checkaudioPermission()) {
                     if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
                         if (mMessageEditText.getText().toString().length() == 0) {
                             Toast.makeText(getApplicationContext(), "Stop ", Toast.LENGTH_SHORT).show();
@@ -510,8 +521,11 @@ public class ChatActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.inchat_menu, menu);
         MenuItem item = menu.getItem(2);
-        if(isIndvChat)
+        MenuItem add = menu.getItem(3);
+        if(isIndvChat) {
             item.setVisible(false);
+            add.setVisible(false);
+        }
         return true;
     }
 
@@ -528,6 +542,9 @@ public class ChatActivity extends AppCompatActivity {
                 break;
             case R.id.exit_group :
                 exitGroup();
+                break;
+            case R.id.add_member:
+                addMember();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -577,6 +594,16 @@ public class ChatActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show();
                 }
+            }
+        }
+        if(requestCode == AUDIO_REQUSET_CODE)
+        {
+            if(grantResults.length>0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            {
+                Toast.makeText(this, "Permission granted", Toast.LENGTH_LONG).show();
+            }
+            else {
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show();
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -892,7 +919,6 @@ public class ChatActivity extends AppCompatActivity {
 
     private void sendDocument(Uri selectedDocUri) {
         final ProgressBar progressBar = findViewById(R.id.progressBar);
-        Toast.makeText(getApplicationContext(), selectedDocUri.toString(), Toast.LENGTH_LONG).show();
         final StorageReference DocRef = pass.docRef.child(System.currentTimeMillis() +
                 selectedDocUri.getLastPathSegment());
 
@@ -900,7 +926,7 @@ public class ChatActivity extends AppCompatActivity {
         task.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Toast.makeText(ChatActivity.this, "done", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatActivity.this, "Sent", Toast.LENGTH_SHORT).show();
                 progressBar.setVisibility(View.GONE);
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -1027,6 +1053,11 @@ public class ChatActivity extends AppCompatActivity {
         pass.groupRef.child(chatId).child(DBvars.GROUP.groupMembers).child(pass.userPhone)
                 .setValue(null);
         finish();
+    }
+    private void addMember()
+    {
+
+        //pass.groupRef.child(chatId).child(DBvars.GROUP.groupMembers).child()
     }
 
 }

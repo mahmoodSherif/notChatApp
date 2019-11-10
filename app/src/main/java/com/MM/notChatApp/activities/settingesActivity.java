@@ -57,7 +57,7 @@ public class settingesActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                AuthCredential credential = PhoneAuthProvider.getCredential("","");
+              //  AuthCredential credential = PhoneAuthProvider.getCredential("","");
 
             }
         });

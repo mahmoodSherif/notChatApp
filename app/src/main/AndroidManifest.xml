@@ -17,7 +17,7 @@
     <application
         android:name=".notChatApp"
         android:allowBackup="true"
-        android:icon="@mipmap/notchatappicon"
+        android:icon="@drawable/grayandblueicon"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/notchatappicon_round"
         android:supportsRtl="true"

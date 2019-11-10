@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
+    android:layout_marginTop="20dp"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:orientation="vertical"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     tools:context=".activities.settingesActivity">
 
     <LinearLayout
+        android:clickable="true"
         android:layout_margin="15dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,7 +21,7 @@
             android:layout_height="wrap_content"
             android:src="@drawable/block_icon"/>
         <TextView
-            android:layout_marginLeft="5dp"
+            android:layout_marginLeft="10dp"
             android:layout_gravity="center"
             android:textColor="#000000"
             android:id="@+id/ViewblockList"
@@ -28,7 +30,8 @@
             android:layout_height="wrap_content"
             android:textSize="20sp"
             android:text="Blocked contacts"
-            android:focusable="true" />
+            android:focusable="true"
+            android:layout_marginStart="10dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -42,7 +45,7 @@
             android:layout_height="wrap_content"
             android:src="@drawable/deleteforever_icon"/>
         <TextView
-            android:layout_marginLeft="5dp"
+            android:layout_marginLeft="10dp"
             android:textColor="#000000"
             android:id="@+id/deleteAccTxt"
             android:focusable="true"
@@ -50,7 +53,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="20sp"
-            android:text="Delete my account"/>
+            android:text="Delete my account"
+            android:layout_marginStart="5dp" />
     </LinearLayout>
     <LinearLayout
         android:layout_margin="15dp"
@@ -63,7 +67,7 @@
             android:layout_height="wrap_content"
             android:src="@drawable/share_icon"/>
         <TextView
-            android:layout_marginLeft="5dp"
+            android:layout_marginLeft="10dp"
             android:layout_margin="10dp"
             android:textColor="#000000"
             android:id="@+id/inviteTxt"
@@ -72,7 +76,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="20sp"
-            android:text="Invite my friends"/>
+            android:text="Invite my friends"
+            android:layout_marginStart="10dp" />
     </LinearLayout>
 
 

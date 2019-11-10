@@ -98,6 +98,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         else{
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.message_item_res, parent, false);
             if(group){
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.group_message_item, parent, false);
                 senderName = convertView.findViewById(R.id.Group_FriendName);
                 User user = notChatApp.allUsers.get(message.getSentby());
                 senderName.setText(user.getUserName());
@@ -121,6 +122,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         else{
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_res_layout, parent, false); // TODO make UI
             if(group){
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_group_layout, parent, false); // TODO make UI
+
                 senderName = convertView.findViewById(R.id.Group_FriendName);
                 User user = notChatApp.allUsers.get(message.getSentby());
                 senderName.setText(user.getUserName());
@@ -150,6 +153,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         else{
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_layout_res, parent, false); // TODO make UI
             if(group){
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_group_res, parent, false); // TODO make UI
+
                 senderName = convertView.findViewById(R.id.Group_FriendName);
                 User user = notChatApp.allUsers.get(message.getSentby());
                 senderName.setText(user.getUserName());
@@ -167,7 +172,6 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 //if user clicks same record
                 if (lastPos == position) {
                     if (player == null) {
-                        Toast.makeText(getContext(), "same but null", Toast.LENGTH_LONG).show();
                         player = new MediaPlayer();
                         try {
                             player.setDataSource(message.getAudioUrl());
@@ -240,6 +244,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         else{
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.doc_layout_res, parent, false); // TODO make UI
             if(group){
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.group_doc_res, parent, false); // TODO make UI
+
                 senderName = convertView.findViewById(R.id.Group_FriendName);
                 User user = notChatApp.allUsers.get(message.getSentby());
                 senderName.setText(user.getUserName());

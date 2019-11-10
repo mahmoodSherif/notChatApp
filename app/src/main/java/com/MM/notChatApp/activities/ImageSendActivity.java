@@ -127,7 +127,7 @@ public class ImageSendActivity extends AppCompatActivity {
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Toast.makeText(ImageSendActivity.this,"done",Toast.LENGTH_SHORT).show();
+                Toast.makeText(ImageSendActivity.this,"Sent",Toast.LENGTH_SHORT).show();
                 finish();
             }
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
