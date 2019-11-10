@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<String ,String > chatIdMap = new HashMap<>();
     private HashSet<String> isGroup = new HashSet<>();
 
+    private Boolean atta = false;
     // user info
     
     @Override
@@ -146,7 +147,10 @@ public class MainActivity extends AppCompatActivity {
                 if (user != null) {
                     pass.userPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
                     FirebaseMessaging.getInstance().subscribeToTopic("user_"+pass.userPhone.substring(1));
-                    getChatList();
+                    if(!atta){
+                        getChatList();
+                        atta = true;
+                    }
                 } else {
                     signIn();
                 }
@@ -179,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
             ValueEventListener listener = entry.getValue();
             ref.removeEventListener(listener);
         }
+        atta = false;
     }
 
     @Override

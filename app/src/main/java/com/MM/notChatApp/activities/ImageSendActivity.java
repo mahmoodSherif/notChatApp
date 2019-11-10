@@ -163,9 +163,14 @@ public class ImageSendActivity extends AppCompatActivity {
                     final SimpleDateFormat Time = new SimpleDateFormat("hh:mm");
                     final Message  message = new Message(captionEditTxt.getText().toString().trim()
                             , Time.format(new Date()) , downloadedUri.toString(), 0, userPhone);
-                    message.setText("📷 Photo");
+                    String or = message.getText();
+                    if(message.getText().length() == 0){
+                        message.setText("📷 Photo");
+                    }else{
+                        message.setText("📷 ".concat(message.getText()));
+                    }
                     ChatActivity.notify(message, friendPhone);
-                    message.setText("");
+                    message.setText(or);
                     Map<String,Object> rr = message.toMap(new ArrayList<String>(Arrays.asList(userPhone , friendPhone)));
                     curChatRef.push().updateChildren(rr);
                     chatRef.child(userPhone).child(friendPhone).push().setValue(downloadedUri.toString());
