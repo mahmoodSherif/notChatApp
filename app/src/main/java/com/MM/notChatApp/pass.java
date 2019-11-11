@@ -11,6 +11,8 @@ import java.util.ArrayList;
 
 public class pass {
     static public ArrayList<User> list = new ArrayList<>();
+    static public ArrayList<String> members = new ArrayList<>();
+
     static public String userPhone = "";
 
     static public FirebaseDatabase mFirebaseDatabase = FirebaseDatabase.getInstance();

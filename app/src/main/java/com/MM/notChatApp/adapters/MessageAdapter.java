@@ -116,13 +116,13 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     private View getPhotoMessage(Message message, ViewGroup parent){
         View convertView;
         if(byMe){
-            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_send_layout, parent, false); // TODO make UI
+            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_send_layout, parent, false);
             stut(convertView , message);
         }
         else{
-            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_res_layout, parent, false); // TODO make UI
+            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_res_layout, parent, false);
             if(group){
-                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_group_layout, parent, false); // TODO make UI
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.photo_group_layout, parent, false);
 
                 senderName = convertView.findViewById(R.id.Group_FriendName);
                 User user = notChatApp.allUsers.get(message.getSentby());
@@ -147,14 +147,13 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     private View getAudioMessage(final Message message, ViewGroup parent , final int position)  {
         View convertView;
         if(byMe){
-            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_layout, parent, false); // TODO make UI
+            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_layout, parent, false);
             stut(convertView , message);
         }
         else{
-            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_layout_res, parent, false); // TODO make UI
+            convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_layout_res, parent, false);
             if(group){
-                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_group_res, parent, false); // TODO make UI
-
+                convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.audio_group_res, parent, false);
                 senderName = convertView.findViewById(R.id.Group_FriendName);
                 User user = notChatApp.allUsers.get(message.getSentby());
                 senderName.setText(user.getUserName());

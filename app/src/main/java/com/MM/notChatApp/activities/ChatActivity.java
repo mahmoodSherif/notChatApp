@@ -618,6 +618,7 @@ public class ChatActivity extends AppCompatActivity {
             intent.putExtra("uriPhoto", selectedImageUri.toString());
             intent.putExtra("chatId", chatId);
             intent.putExtra("curChatId", curChatId);
+            pass.members = usersList;
             startActivity(intent);
         }
         if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
