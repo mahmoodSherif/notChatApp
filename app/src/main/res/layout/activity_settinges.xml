@@ -54,7 +54,7 @@
             android:layout_height="wrap_content"
             android:textSize="20sp"
             android:text="Delete my account"
-            android:layout_marginStart="5dp" />
+            android:layout_marginStart="10dp" />
     </LinearLayout>
     <LinearLayout
         android:layout_margin="15dp"

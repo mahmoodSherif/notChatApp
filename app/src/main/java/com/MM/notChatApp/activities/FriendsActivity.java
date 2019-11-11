@@ -222,7 +222,7 @@ public class FriendsActivity extends AppCompatActivity {
             }
         } while (names.moveToNext());
         for (String number : map.keySet()) {
-            if (checkIfNumVal(number)) {
+            if (checkIfNumVal(number) &&!number.equals(userPhone)) {
                 Log.v("NEWEE", "new one ");
                 //   String num = numbers.get(i).replaceAll(" ","");
                 // read(num);
