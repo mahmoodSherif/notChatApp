@@ -212,13 +212,17 @@ public class FriendsActivity extends AppCompatActivity {
             //numbers.add(number);
             String num = number.replaceAll(" ","");
             StringBuilder newString = new StringBuilder();
-            if(num.charAt(0)!='+'&&num.charAt(1)!='2') {
-              newString.append("+2");
-              newString.append(num);
-              map.put(newString.toString(),true);
+            try {
+                if (num.charAt(0) != '+' && num.charAt(1) != '2') {
+                    newString.append("+2");
+                    newString.append(num);
+                    map.put(newString.toString(), true);
+                } else {
+                    map.put(num, true);
+                }
             }
-            else {
-                map.put(num, true);
+            catch (Exception e){
+                Log.v("Number", "invalid format ");
             }
         } while (names.moveToNext());
         for (String number : map.keySet()) {

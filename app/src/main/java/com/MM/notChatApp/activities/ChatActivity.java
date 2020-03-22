@@ -498,6 +498,12 @@ public class ChatActivity extends AppCompatActivity {
         have = false;
     }
 
+    @Override
+    protected void onStop() {
+
+        super.onStop();
+    }
+
     private void checkStatus() {
         pass.userRef.child(chatId).child("UserStatues").addValueEventListener(
                 new ValueEventListener() {
@@ -562,12 +568,7 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        Intent intent = new Intent(ChatActivity.this, MainActivity.class);
-        startActivity(intent);
-    }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
