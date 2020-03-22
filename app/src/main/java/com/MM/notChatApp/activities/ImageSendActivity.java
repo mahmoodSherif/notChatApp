@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import com.MM.notChatApp.R;
 import com.MM.notChatApp.classes.Message;
+import com.MM.notChatApp.pass;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCanceledListener;
@@ -171,7 +172,7 @@ public class ImageSendActivity extends AppCompatActivity {
                     }
                     ChatActivity.notify(message, friendPhone);
                     message.setText(or);
-                    Map<String,Object> rr = message.toMap(new ArrayList<String>(Arrays.asList(userPhone , friendPhone)));
+                    Map<String,Object> rr = message.toMap(pass.members);
                     curChatRef.push().updateChildren(rr);
                     chatRef.child(userPhone).child(friendPhone).push().setValue(downloadedUri.toString());
                     chatRef.child(friendPhone).child(userPhone).push().setValue(downloadedUri.toString());
